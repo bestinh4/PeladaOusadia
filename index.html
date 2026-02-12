@@ -36,14 +36,13 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: "#ff0000",
-                        secondary: "#173b6e",
-                        background: "#f1f5f9",
+                        primary: "#E30613",
+                        secondary: "#00519E",
+                        background: "#f8fafc",
                         surface: "#ffffff",
-                        accent: "#ff0000",
+                        accent: "#E30613",
                         success: "#10b981",
                         warning: "#f59e0b",
-                        navy: "#0a192f",
                         gold: "#fbbf24",
                         silver: "#94a3b8",
                         bronze: "#92400e"
@@ -78,26 +77,35 @@
 
         body {
             background-color: #f8fafc;
-            color: #173b6e;
+            color: #00519E;
             -webkit-tap-highlight-color: transparent;
         }
 
         .pro-shadow {
-            box-shadow: 0 20px 40px -15px rgba(23, 59, 110, 0.12);
+            box-shadow: 0 10px 40px -15px rgba(0, 81, 158, 0.15);
+        }
+
+        .kockasti-pattern {
+            background-image: conic-gradient(#E30613 90deg, #fff 90deg 180deg, #E30613 180deg 270deg, #fff 270deg);
+            background-size: 40px 40px;
         }
 
         .stadium-overlay {
-            background: linear-gradient(to bottom, rgba(23, 59, 110, 0.7), rgba(23, 59, 110, 0.95)), url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1000&auto=format&fit=crop');
+            background: linear-gradient(to bottom, rgba(0, 81, 158, 0.8), rgba(0, 81, 158, 0.98)), url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1000&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
         }
 
         .btn-elite {
-            background: linear-gradient(135deg, #ff0000, #cc0000);
+            background: linear-gradient(135deg, #E30613, #b0050f);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        
+        input:focus {
+            box-shadow: 0 0 0 2px rgba(227, 6, 19, 0.1);
+        }
     </style>
-</head>
+ head>
 <body class="font-sans antialiased overflow-hidden">
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
