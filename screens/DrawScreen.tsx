@@ -51,7 +51,10 @@ const DrawScreen: React.FC<DrawScreenProps> = ({ players, onNavigate }) => {
 
   const handleDraw = () => {
     let pool = [...confirmedPlayers];
-    if (pool.length === 0) return;
+    if (pool.length < numTeams) {
+      alert(`Necessário pelo menos ${numTeams} jogadores confirmados.`);
+      return;
+    }
 
     pool = pool.sort(() => Math.random() - 0.5);
 
@@ -83,42 +86,57 @@ const DrawScreen: React.FC<DrawScreenProps> = ({ players, onNavigate }) => {
     dispatch({ type: 'SET_TEAMS', teams: newTeams });
   };
 
+  const handleShare = () => {
+    if (teams.length === 0) return;
+    
+    let text = "*⚽ ESCALAÇÃO VATRENI MANAGER*\n\n";
+    teams.forEach(t => {
+      text += `*${t.name.toUpperCase()}* (Média: ${t.average})\n`;
+      t.players.forEach(p => {
+        text += `- ${p.name} (${p.position})\n`;
+      });
+      text += "\n";
+    });
+    text += "_Gerado via Vatreni App_";
+
+    navigator.clipboard.writeText(text);
+    alert("Escalação copiada! Agora é só colar no WhatsApp do grupo. 🚀");
+  };
+
   return (
     <div className="h-full bg-background flex flex-col relative">
       <header className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-6 sticky top-0 bg-white/90 backdrop-blur-md z-30 border-b border-slate-100 shrink-0">
-        <button onClick={() => onNavigate('home')} className="size-9 sm:size-10 bg-slate-50 text-secondary rounded-xl flex items-center justify-center hover:bg-slate-100 active:scale-90 transition-all">
+        <button onClick={() => onNavigate('home')} className="size-9 sm:size-10 bg-slate-50 text-secondary rounded-xl flex items-center justify-center active:scale-90 transition-all">
           <span className="material-symbols-outlined text-[20px] sm:text-[24px]">arrow_back</span>
         </button>
         <h2 className="text-lg sm:text-xl font-black text-secondary italic tracking-tighter">Sorteio de Times</h2>
-        <button className="size-9 sm:size-10 bg-slate-50 text-secondary rounded-xl flex items-center justify-center hover:bg-slate-100 active:scale-90 transition-all">
-          <span className="material-symbols-outlined text-[20px] sm:text-[24px]">settings</span>
-        </button>
+        <div className="size-9 sm:size-10"></div>
       </header>
 
       <div className="flex-1 overflow-y-auto no-scrollbar pb-36">
         <div className="px-4 sm:px-6 py-6 sm:py-8 animate-slide-up">
-          <h3 className="text-[9px] sm:text-[11px] font-black text-slate-300 uppercase tracking-widest mb-4">Configuração</h3>
+          <h3 className="text-[9px] sm:text-[11px] font-black text-slate-300 uppercase tracking-widest mb-4">Configuração Técnica</h3>
           
           <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 space-y-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
                 <p className="text-xs sm:text-sm font-black text-secondary uppercase">Número de Times</p>
-                <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">{confirmedPlayers.length > 0 ? Math.floor(confirmedPlayers.length / numTeams) : 0} atletas p/ time</p>
+                <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">{confirmedPlayers.length} Confirmados</p>
               </div>
               <div className="flex items-center gap-3 sm:gap-4 bg-slate-50 p-1.5 sm:p-2 rounded-2xl border border-slate-100">
-                <button onClick={() => dispatch({ type: 'SET_NUM_TEAMS', count: Math.max(2, numTeams - 1) })} className="size-8 bg-white border border-slate-200 rounded-xl text-secondary font-black hover:bg-slate-50 transition-colors">-</button>
+                <button onClick={() => dispatch({ type: 'SET_NUM_TEAMS', count: Math.max(2, numTeams - 1) })} className="size-8 bg-white border border-slate-200 rounded-xl text-secondary font-black active:scale-90 transition-all">-</button>
                 <span className="text-base sm:text-lg font-black text-secondary w-4 text-center">{numTeams}</span>
-                <button onClick={() => dispatch({ type: 'SET_NUM_TEAMS', count: Math.min(6, numTeams + 1) })} className="size-8 bg-secondary text-white rounded-xl font-black hover:brightness-110 active:scale-90 transition-all">+</button>
+                <button onClick={() => dispatch({ type: 'SET_NUM_TEAMS', count: Math.min(6, numTeams + 1) })} className="size-8 bg-secondary text-white rounded-xl font-black active:scale-90 transition-all">+</button>
               </div>
             </div>
 
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs sm:text-sm font-black text-secondary flex items-center gap-2 uppercase">
-                  Equilibrar Nível
+                  Balancear por Nível
                   <span className="material-symbols-outlined text-amber-500 text-[12px] sm:text-[14px]">star</span>
                 </p>
-                <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">Média técnica garantida</p>
+                <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">Algoritmo de Equilíbrio</p>
               </div>
               <button 
                 onClick={() => dispatch({ type: 'TOGGLE_BALANCE' })} 
@@ -132,46 +150,50 @@ const DrawScreen: React.FC<DrawScreenProps> = ({ players, onNavigate }) => {
 
         <div className="px-4 sm:px-6 space-y-6 animate-slide-up delay-100">
           <div className="flex items-center justify-between">
-            <h3 className="text-[9px] sm:text-[11px] font-black text-slate-300 uppercase tracking-widest">Times Gerados</h3>
-            <button className="text-[9px] sm:text-[10px] font-black text-secondary/60 flex items-center gap-1 uppercase tracking-widest hover:text-primary transition-colors active:scale-95">
-              <span className="material-symbols-outlined text-[14px]">share</span>
-              WhatsApp
-            </button>
+            <h3 className="text-[9px] sm:text-[11px] font-black text-slate-300 uppercase tracking-widest">Convocação Gerada</h3>
+            {teams.length > 0 && (
+              <button 
+                onClick={handleShare}
+                className="text-[9px] sm:text-[10px] font-black text-success flex items-center gap-1.5 uppercase tracking-widest hover:brightness-90 transition-all active:scale-95 bg-success/10 px-3 py-1.5 rounded-full"
+              >
+                <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                Copiar Escalação
+              </button>
+            )}
           </div>
 
           {teams.length === 0 ? (
-            <div className="bg-white border border-dashed border-slate-200 rounded-[2rem] sm:rounded-[2.5rem] p-10 sm:p-12 text-center shadow-inner">
-              <div className="size-14 sm:size-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-200">
-                <span className="material-symbols-outlined text-[28px] sm:text-[32px]">shuffle</span>
+            <div className="bg-white border-2 border-dashed border-slate-200 rounded-[2.5rem] p-12 text-center shadow-inner">
+              <div className="size-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-200">
+                <span className="material-symbols-outlined text-[32px]">shuffle</span>
               </div>
-              <p className="text-[10px] sm:text-xs text-slate-300 font-black uppercase tracking-widest leading-relaxed">Prepare a lista e clique<br/>para sortear os atletas</p>
+              <p className="text-[10px] sm:text-xs text-slate-300 font-black uppercase tracking-widest leading-relaxed">Clique no botão abaixo para<br/>realizar o sorteio cirúrgico</p>
             </div>
           ) : (
             <div className="space-y-6">
               {teams.map((team, idx) => (
-                <div key={idx} className="bg-white border border-slate-100 rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden animate-scale-in shadow-md hover:border-primary transition-all">
-                  <div className="px-5 sm:px-6 py-3 sm:py-4 flex items-center justify-between border-b border-slate-50 bg-slate-50/50">
+                <div key={idx} className="bg-white border border-slate-100 rounded-[2.2rem] overflow-hidden animate-scale-in shadow-md hover:border-primary/30 transition-all">
+                  <div className="px-6 py-4 flex items-center justify-between bg-slate-50/50 border-b border-slate-100">
                     <div className="flex items-center gap-3">
-                      <div className="size-8 sm:size-10 bg-secondary text-white rounded-xl flex items-center justify-center font-black italic shadow-lg shadow-secondary/20">{team.name.split(' ')[1]}</div>
-                      <span className="text-xs sm:text-sm font-black text-secondary uppercase italic truncate">{team.name}</span>
+                      <div className="size-10 bg-secondary text-white rounded-xl flex items-center justify-center font-black italic shadow-lg shadow-secondary/20">{team.name.split(' ')[1]}</div>
+                      <span className="text-sm font-black text-secondary uppercase italic tracking-tight">{team.name}</span>
                     </div>
-                    <div className="flex items-center gap-1 px-2.5 sm:px-3 py-1 bg-white rounded-full border border-slate-100 shadow-sm">
-                      <span className="text-[9px] sm:text-[10px] font-black text-secondary">{team.average}</span>
-                      <span className="material-symbols-outlined text-amber-500 text-[10px] sm:text-[12px]">star</span>
+                    <div className="flex items-center gap-1 px-3 py-1 bg-white rounded-full border border-slate-100">
+                      <span className="text-[10px] font-black text-secondary">{team.average}</span>
+                      <span className="material-symbols-outlined text-amber-500 text-[12px]">star</span>
                     </div>
                   </div>
-                  <div className="p-4 sm:p-5 space-y-3 sm:space-y-4">
+                  <div className="p-5 space-y-4">
                     {team.players.map(p => (
                       <div key={p.id} className="flex items-center justify-between group">
                         <div className="flex items-center gap-3">
-                          <img src={p.avatar} className="size-8 sm:size-9 rounded-full bg-slate-100 border border-slate-200 object-cover" alt={p.name} />
-                          <span className="text-[11px] sm:text-xs font-bold text-secondary uppercase tracking-tight truncate max-w-[120px] group-hover:text-primary transition-colors">{p.name}</span>
+                          <img src={p.avatar} className="size-9 rounded-full border border-slate-100 object-cover" alt={p.name} />
+                          <div className="flex flex-col">
+                            <span className="text-xs font-bold text-secondary uppercase tracking-tight truncate group-hover:text-primary transition-colors">{p.name}</span>
+                            <span className="text-[8px] font-black text-slate-400 uppercase">{p.position}</span>
+                          </div>
                         </div>
-                        <div className="flex gap-0.5 shrink-0">
-                          {[1, 2, 3, 4, 5].map(i => (
-                            <span key={i} className={`material-symbols-outlined text-[8px] sm:text-[10px] ${i <= Math.round(p.rating/20) ? 'text-primary' : 'text-slate-100'}`}>star</span>
-                          ))}
-                        </div>
+                        <div className="text-[10px] font-black text-primary italic">{p.rating}</div>
                       </div>
                     ))}
                   </div>
@@ -185,11 +207,10 @@ const DrawScreen: React.FC<DrawScreenProps> = ({ players, onNavigate }) => {
       <div className="absolute bottom-6 sm:bottom-10 left-0 w-full px-4 sm:px-6 z-40 animate-slide-up pointer-events-none">
         <button 
           onClick={handleDraw}
-          disabled={confirmedPlayers.length < numTeams}
-          className="w-full h-14 sm:h-15 btn-primary rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale shadow-2xl pointer-events-auto active:scale-95 transition-all"
+          className="w-full h-15 btn-primary rounded-2xl flex items-center justify-center gap-3 shadow-2xl pointer-events-auto active:scale-95 transition-all"
         >
-          <span className="material-symbols-outlined font-black text-[20px] sm:text-[24px]">shuffle</span>
-          <span className="text-xs sm:text-sm uppercase tracking-widest">Sortear Times Equilibrados</span>
+          <span className="material-symbols-outlined font-black text-[24px]">shuffle</span>
+          <span className="text-xs sm:text-sm uppercase tracking-widest font-black">Sortear Times de Elite</span>
         </button>
       </div>
     </div>

@@ -20,10 +20,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
     position: player.position,
     level: player.level,
     club: player.club || '',
-    number: player.number || 0
+    number: player.number || 0,
+    stats: { ...player.stats }
   });
 
   const isOwnProfile = currentPlayer?.id === player.id;
+  const isAdmin = currentPlayer?.role === 'admin';
 
   const handleAvatarClick = () => {
     if (!isOwnProfile) return;
@@ -40,7 +42,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
   const handleSaveProfile = async () => {
     setLoading(true);
     try {
-      await playerService.updateProfile(player.id, editData);
+      const rating = Math.round(
+        (editData.stats.pac + editData.stats.sho + editData.stats.pas + 
+         editData.stats.dri + editData.stats.def + editData.stats.phy) / 6
+      );
+      await playerService.updateProfile(player.id, { ...editData, rating });
       setIsEditing(false);
     } catch (err: any) {
       alert("Erro ao salvar: " + err.message);
@@ -58,12 +64,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
         <h2 className="text-lg font-black text-secondary italic uppercase tracking-tighter">Ficha Técnica</h2>
-        {isOwnProfile ? (
+        {(isOwnProfile || isAdmin) ? (
           <button 
             onClick={() => isEditing ? handleSaveProfile() : setIsEditing(true)}
+            disabled={loading}
             className={`size-10 rounded-xl flex items-center justify-center transition-all active:scale-90 ${isEditing ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-50 text-secondary'}`}
           >
-            <span className="material-symbols-outlined text-[20px]">{isEditing ? 'check' : 'edit'}</span>
+            {loading ? (
+              <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            ) : (
+              <span className="material-symbols-outlined text-[20px]">{isEditing ? 'check' : 'edit'}</span>
+            )}
           </button>
         ) : <div className="size-10"></div>}
       </header>
@@ -82,7 +93,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
                  </div>
                )}
             </div>
-            {player.rating > 80 && (
+            {player.role === 'admin' && (
               <div className="absolute bottom-1 right-1 size-10 bg-secondary rounded-full border-4 border-white flex items-center justify-center shadow-lg z-30">
                 <span className="material-symbols-outlined text-white text-[18px] font-bold">verified</span>
               </div>
@@ -90,18 +101,18 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
           </div>
           
           {isEditing ? (
-            <div className="w-full px-12 space-y-4 relative z-10">
+            <div className="w-full px-8 space-y-4 relative z-10 animate-fade-in">
               <input 
                 value={editData.name}
                 onChange={(e) => setEditData({...editData, name: e.target.value})}
-                className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-center text-lg font-black text-secondary"
-                placeholder="Nome"
+                className="w-full h-12 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-center text-lg font-black text-secondary focus:border-primary/30 transition-all"
+                placeholder="Nome do Atleta"
               />
               <div className="flex gap-2">
                 <select 
                   value={editData.position}
                   onChange={(e) => setEditData({...editData, position: e.target.value})}
-                  className="flex-1 h-10 bg-slate-50 border border-slate-100 rounded-xl px-2 text-[10px] font-black uppercase tracking-widest text-secondary"
+                  className="flex-1 h-11 bg-slate-50 border border-slate-100 rounded-xl px-2 text-[10px] font-black uppercase tracking-widest text-secondary"
                 >
                   <option>Midfielder</option>
                   <option>Forward</option>
@@ -111,7 +122,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
                 <select 
                   value={editData.level}
                   onChange={(e) => setEditData({...editData, level: e.target.value})}
-                  className="flex-1 h-10 bg-slate-50 border border-slate-100 rounded-xl px-2 text-[10px] font-black uppercase tracking-widest text-secondary"
+                  className="flex-1 h-11 bg-slate-50 border border-slate-100 rounded-xl px-2 text-[10px] font-black uppercase tracking-widest text-secondary"
                 >
                   <option>Amador</option>
                   <option>Semi-Pro</option>
@@ -120,30 +131,31 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
               </div>
             </div>
           ) : (
-            <>
-              <h1 className="text-3xl font-black text-secondary uppercase italic tracking-tighter mb-1 relative z-10">{player.name}</h1>
-              <div className="flex items-center gap-3 relative z-10">
+            <div className="text-center relative z-10">
+              <h1 className="text-3xl font-black text-secondary uppercase italic tracking-tighter mb-1">{player.name}</h1>
+              <div className="flex items-center justify-center gap-3">
                 <span className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-primary/20">{player.position}</span>
-                <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Rank: {player.level}</span>
+                <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{player.level}</span>
               </div>
-            </>
+            </div>
           )}
         </div>
 
-        {/* Real Stats */}
-        <div className="px-6 grid grid-cols-3 gap-4 mb-10 -mt-12 relative z-20">
+        {/* Stats Grid */}
+        <div className="px-6 grid grid-cols-3 gap-3 sm:gap-4 mb-10 -mt-12 relative z-20">
           {[
             { val: player.goals, label: 'Gols', color: 'bg-primary shadow-primary/20' },
             { val: player.assists, label: 'Assists', color: 'bg-secondary shadow-secondary/20' },
-            { val: player.matches, label: 'Partidas', color: 'bg-white border border-slate-100' }
+            { val: player.matches, label: 'Jogos', color: 'bg-white border border-slate-100' }
           ].map(s => (
-            <div key={s.label} className={`rounded-[2.5rem] p-6 flex flex-col items-center justify-center shadow-lg ${s.color}`}>
-              <span className={`text-3xl font-black mb-1 ${s.color.includes('white') ? 'text-secondary' : 'text-white'}`}>{s.val}</span>
-              <span className={`text-[9px] font-black uppercase tracking-widest ${s.color.includes('white') ? 'text-slate-400' : 'text-white/60'}`}>{s.label}</span>
+            <div key={s.label} className={`rounded-[2.2rem] p-5 sm:p-6 flex flex-col items-center justify-center shadow-lg ${s.color}`}>
+              <span className={`text-2xl sm:text-3xl font-black mb-1 ${s.color.includes('white') ? 'text-secondary' : 'text-white'}`}>{s.val}</span>
+              <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-widest ${s.color.includes('white') ? 'text-slate-400' : 'text-white/60'}`}>{s.label}</span>
             </div>
           ))}
         </div>
 
+        {/* Attributes Section */}
         <div className="px-6 mb-10 space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-black text-secondary italic">Atributos</h3>
@@ -153,27 +165,46 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
             </div>
           </div>
 
-          <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 space-y-8 shadow-sm">
+          <div className="bg-white border border-slate-100 rounded-[2.5rem] p-6 sm:p-8 space-y-8 shadow-sm">
             {[
-              { label: 'Ritmo', val: player.stats.pac, icon: 'bolt', color: 'bg-primary' },
-              { label: 'Finalização', val: player.stats.sho, icon: 'sports_soccer', color: 'bg-secondary' },
-              { label: 'Passe', val: player.stats.pas, icon: 'swap_calls', color: 'bg-success' }
-            ].map(skill => (
-              <div key={skill.label} className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className={`size-8 rounded-lg ${skill.color} flex items-center justify-center text-white shadow-lg`}>
-                      <span className="material-symbols-outlined text-[18px]">{skill.icon}</span>
+              { key: 'pac', label: 'Ritmo', icon: 'bolt', color: 'bg-primary' },
+              { key: 'sho', label: 'Finalização', icon: 'sports_soccer', color: 'bg-secondary' },
+              { key: 'pas', label: 'Passe', icon: 'swap_calls', color: 'bg-success' },
+              { key: 'def', label: 'Defesa', icon: 'shield', color: 'bg-navy' }
+            ].map(skill => {
+              const value = isEditing ? (editData.stats as any)[skill.key] : (player.stats as any)[skill.key];
+              return (
+                <div key={skill.key} className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div className={`size-8 rounded-lg ${skill.color} flex items-center justify-center text-white shadow-lg`}>
+                        <span className="material-symbols-outlined text-[18px]">{skill.icon}</span>
+                      </div>
+                      <span className="text-[11px] sm:text-xs font-black text-secondary uppercase tracking-wider">{skill.label}</span>
                     </div>
-                    <span className="text-sm font-black text-secondary uppercase">{skill.label}</span>
+                    <span className="text-sm font-black text-secondary italic">{value}</span>
                   </div>
-                  <span className="text-sm font-black text-secondary italic">{skill.val}</span>
+                  
+                  {isEditing ? (
+                    <input 
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={value}
+                      onChange={(e) => setEditData({
+                        ...editData, 
+                        stats: { ...editData.stats, [skill.key]: parseInt(e.target.value) }
+                      })}
+                      className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-primary"
+                    />
+                  ) : (
+                    <div className="w-full h-2.5 bg-slate-50 rounded-full overflow-hidden p-0.5 border border-slate-50">
+                      <div className={`h-full ${skill.color} rounded-full transition-all duration-1000`} style={{ width: `${value}%` }}></div>
+                    </div>
+                  )}
                 </div>
-                <div className="w-full h-2.5 bg-slate-50 rounded-full overflow-hidden p-0.5 border border-slate-100">
-                  <div className={`h-full ${skill.color} rounded-full transition-all duration-1000`} style={{ width: `${skill.val}%` }}></div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
