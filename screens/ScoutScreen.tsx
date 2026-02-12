@@ -12,7 +12,7 @@ const ScoutScreen: React.FC<ScoutScreenProps> = ({ players, onNavigate }) => {
   const sortedPlayers = [...players].sort((a, b) => b.goals - a.goals);
   const filteredPlayers = filter === 'Todos' ? sortedPlayers : sortedPlayers.filter(p => p.position === filter);
   const filters = ['Todos', 'Forward', 'Midfielder', 'Defender', 'Goalkeeper'];
-  const CROATIA_LOGO = "https://upload.wikimedia.org/wikipedia/en/d/d0/Croatian_Football_Federation_logo.svg";
+  const CROATIA_LOGO = "https://upload.wikimedia.org/wikipedia/pt/c/cf/Croatia_football_federation.png";
 
   return (
     <div className="h-full bg-background overflow-y-auto no-scrollbar pb-32">

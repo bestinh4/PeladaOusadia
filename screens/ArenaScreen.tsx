@@ -17,7 +17,7 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
   
   const GAME_FEE = activeMatch?.price || 0;
   const userBalance = currentPlayer?.paid ? 0 : (isConfirmed ? GAME_FEE : 0);
-  const CROATIA_LOGO = "https://upload.wikimedia.org/wikipedia/en/d/d0/Croatian_Football_Federation_logo.svg";
+  const CROATIA_LOGO = "https://upload.wikimedia.org/wikipedia/pt/c/cf/Croatia_football_federation.png";
 
   return (
     <div className="h-full bg-background overflow-y-auto no-scrollbar pb-36 px-5">

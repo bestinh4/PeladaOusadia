@@ -12,7 +12,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [error, setError] = useState<{ code: string; message: string; domain?: string } | null>(null);
 
-  const CROATIA_LOGO = "https://upload.wikimedia.org/wikipedia/en/d/d0/Croatian_Football_Federation_logo.svg";
+  const CROATIA_LOGO = "https://upload.wikimedia.org/wikipedia/pt/c/cf/Croatia_football_federation.png";
 
   const handleGoogleLogin = async () => {
     if (isAuthenticating || loginSuccess) return;

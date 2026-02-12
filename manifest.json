@@ -10,15 +10,15 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://upload.wikimedia.org/wikipedia/en/d/d0/Croatian_Football_Federation_logo.svg",
+      "src": "https://upload.wikimedia.org/wikipedia/pt/c/cf/Croatia_football_federation.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://upload.wikimedia.org/wikipedia/en/d/d0/Croatian_Football_Federation_logo.svg",
+      "src": "https://upload.wikimedia.org/wikipedia/pt/c/cf/Croatia_football_federation.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
