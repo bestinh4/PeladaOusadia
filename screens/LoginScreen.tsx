@@ -42,11 +42,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
       <div className="w-full max-w-[380px] bg-white rounded-[3.5rem] shadow-[0_40px_80px_-15px_rgba(0,81,158,0.15)] p-10 flex flex-col items-center gap-8 relative z-10 animate-scale-in border border-slate-100">
         
         <div className="relative group">
-          <div className="size-32 bg-white rounded-[2.5rem] flex items-center justify-center shadow-xl relative overflow-hidden transition-all duration-500 group-hover:rotate-6 p-4">
-             <img src={CROATIA_LOGO} alt="Croatia Logo" className="w-full h-full object-contain z-10" />
+          <div className="size-32 bg-white rounded-[2.5rem] flex items-center justify-center shadow-xl relative transition-all duration-500 group-hover:rotate-6 p-4">
+             <img src={CROATIA_LOGO} alt="Croatia Logo" className="w-full h-full object-contain z-10 scale-110" />
           </div>
           {loginSuccess && (
-            <div className="absolute -top-2 -right-2 size-10 bg-success rounded-full flex items-center justify-center border-4 border-white animate-scale-in shadow-lg">
+            <div className="absolute -top-2 -right-2 size-10 bg-success rounded-full flex items-center justify-center border-4 border-white animate-scale-in shadow-lg z-20">
               <span className="material-symbols-outlined text-white text-[24px] font-black">check</span>
             </div>
           )}

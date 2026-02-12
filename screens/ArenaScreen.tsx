@@ -23,8 +23,10 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
     <div className="h-full bg-background overflow-y-auto no-scrollbar pb-36 px-5">
       {/* Header Fiel ao Print */}
       <header className="flex items-center justify-between pt-8 pb-4 sticky top-0 z-40 bg-background/90 backdrop-blur-md -mx-5 px-5">
-        <div className="flex items-center gap-2">
-          <img src={CROATIA_LOGO} alt="Logo" className="size-8 object-contain" />
+        <div className="flex items-center gap-2.5">
+          <div className="size-9 flex items-center justify-center">
+            <img src={CROATIA_LOGO} alt="Logo" className="w-full h-full object-contain" />
+          </div>
           <div className="flex flex-col">
             <h1 className="text-lg font-black text-secondary italic tracking-tighter leading-none">
               O<span className="text-primary">&</span>A
