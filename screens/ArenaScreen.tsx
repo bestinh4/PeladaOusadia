@@ -19,118 +19,118 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
   const userBalance = currentPlayer?.paid ? 0 : (isConfirmed ? GAME_FEE : 0);
 
   return (
-    <div className="h-full bg-background overflow-y-auto no-scrollbar pb-36 px-5 sm:px-6">
-      {/* Header Premium */}
-      <header className="flex items-center justify-between pt-8 pb-6 sticky top-0 z-40 glass-header -mx-5 px-5 transition-all duration-300">
-        <div className="flex flex-col">
-          <h1 className="text-xl font-black text-secondary italic tracking-tighter leading-none">Vatreni</h1>
-          <p className="text-[8px] font-black text-primary uppercase tracking-[0.4em] mt-1">Football Manager</p>
+    <div className="h-full bg-slate-50 overflow-y-auto no-scrollbar pb-36 px-6">
+      {/* Dynamic Header */}
+      <header className="flex items-center justify-between pt-10 pb-6 sticky top-0 z-40 bg-slate-50/80 backdrop-blur-xl -mx-6 px-6">
+        <div>
+          <h1 className="text-2xl font-black text-secondary italic tracking-tighter leading-none">VATRENI</h1>
+          <p className="text-[9px] font-black text-primary uppercase tracking-[0.4em] mt-1.5">Elite Manager</p>
         </div>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           {isAdmin && (
             <button 
               onClick={() => onNavigate('create-match')}
-              className="size-10 bg-secondary text-white rounded-xl flex items-center justify-center active:scale-90 transition-all shadow-lg shadow-secondary/20"
+              className="size-11 bg-secondary text-white rounded-2xl flex items-center justify-center active:scale-90 transition-all shadow-xl shadow-secondary/20"
             >
-              <span className="material-symbols-outlined text-[20px]">add</span>
+              <span className="material-symbols-outlined text-[24px]">add</span>
             </button>
           )}
           <button 
             onClick={() => onNavigate('finance')}
-            className="group relative size-10 bg-white shadow-md border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary transition-all active:scale-90"
+            className="size-11 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-secondary shadow-sm active:scale-90 transition-all relative"
           >
-            <span className="material-symbols-outlined text-[22px] interactive-icon">account_balance_wallet</span>
+            <span className="material-symbols-outlined text-[24px]">payments</span>
             {players.some(p => !p.paid && p.confirmed) && (
-              <div className="absolute top-0.5 right-0.5 size-2.5 bg-primary rounded-full border-2 border-white animate-ping"></div>
+              <span className="absolute top-0 right-0 size-2.5 bg-primary rounded-full border-2 border-white animate-pulse"></span>
             )}
           </button>
         </div>
       </header>
 
       {/* Main Content Area */}
-      <div className="space-y-6 mt-2">
-        {/* Match Highlight Section */}
+      <div className="space-y-8 mt-4">
+        {/* Match Hub Section */}
         <section className="animate-slide-up">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-black text-secondary uppercase tracking-widest italic">Match Day</h2>
-            <div className="flex items-center gap-1.5">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Próximo Confronto</h2>
+            <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full">
               <span className="size-1.5 bg-primary rounded-full animate-pulse"></span>
-              <span className="text-[9px] font-black text-primary uppercase tracking-widest">Live Updates</span>
+              <span className="text-[8px] font-black text-primary uppercase tracking-widest">Inscrições Abertas</span>
             </div>
           </div>
 
           {activeMatch ? (
-            <div className="stadium-bg rounded-[2.5rem] p-7 border border-white/20 relative overflow-hidden group premium-shadow animate-scale-in">
-              <div className="absolute top-0 right-0 p-6 opacity-10">
-                <span className="material-symbols-outlined text-[80px]">sports_soccer</span>
-              </div>
-              
+            <div className="stadium-overlay rounded-[3rem] p-8 border border-white/10 relative overflow-hidden pro-shadow animate-scale-in">
               <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="px-2.5 py-1 bg-white/20 backdrop-blur-md rounded-lg text-[8px] font-black text-white uppercase tracking-widest border border-white/20">
+                <div className="flex justify-between items-start mb-10">
+                  <div className="px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-2xl border border-white/10 text-[9px] font-black text-white uppercase tracking-widest">
                     {activeMatch.type}
-                  </span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-0.5">Arena Price</p>
+                    <p className="text-sm font-black text-white italic">R$ {activeMatch.price}</p>
+                  </div>
                 </div>
 
-                <div className="mb-8">
-                  <h3 className="text-3xl font-black text-white italic tracking-tighter leading-none mb-1">{activeMatch.time}</h3>
-                  <p className="text-sm font-bold text-white/80 italic">{activeMatch.date}</p>
+                <div className="mb-10 text-center">
+                  <h3 className="text-5xl font-black text-white italic tracking-tighter mb-1">{activeMatch.time}</h3>
+                  <p className="text-sm font-bold text-white/70 uppercase tracking-widest">{activeMatch.date}</p>
                 </div>
 
-                <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 border border-white/10 flex items-center justify-between mb-8">
-                  <div className="flex items-center gap-3">
-                    <div className="size-9 bg-primary text-white rounded-xl flex items-center justify-center shadow-lg">
-                      <span className="material-symbols-outlined text-[18px]">stadium</span>
+                <div className="bg-white/10 backdrop-blur-xl rounded-[2rem] p-5 border border-white/5 flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="size-10 bg-primary text-white rounded-xl flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[22px]">location_on</span>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-black text-white/60 uppercase tracking-widest leading-none mb-1">Local</p>
+                    <div className="truncate">
+                      <p className="text-[8px] font-black text-white/40 uppercase tracking-widest leading-none mb-1">Localização</p>
                       <p className="text-xs font-black text-white truncate">{activeMatch.location}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-2.5">
-                  <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-white/80">
-                    <span>Squad Confirmada</span>
-                    <span>{confirmedCount} / {activeMatch.limit}</span>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-white">
+                    <span className="opacity-60">Escalação Confirmada</span>
+                    <span className="bg-white/20 px-2 py-0.5 rounded-md">{confirmedCount} / {activeMatch.limit}</span>
                   </div>
-                  <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden p-[1px]">
+                  <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden p-0.5">
                     <div 
-                      className="h-full bg-white transition-all duration-1000 ease-out rounded-full" 
-                      style={{ width: `${Math.min((confirmedCount/activeMatch.limit)*100, 100)}%` }}
+                      className="h-full bg-white rounded-full transition-all duration-1000 ease-out" 
+                      style={{ width: `${(confirmedCount/activeMatch.limit)*100}%` }}
                     ></div>
                   </div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="bg-white border-2 border-dashed border-slate-200 rounded-[2.5rem] p-12 flex flex-col items-center justify-center text-center animate-scale-in">
-              <div className="size-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-4">
-                <span className="material-symbols-outlined text-[32px]">event_busy</span>
+            <div className="bg-white border-2 border-dashed border-slate-200 rounded-[3rem] p-16 flex flex-col items-center justify-center text-center animate-scale-in">
+              <div className="size-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6">
+                <span className="material-symbols-outlined text-[40px]">event_busy</span>
               </div>
-              <p className="text-[10px] font-black text-slate-300 uppercase italic tracking-widest leading-relaxed">
-                Nenhum confronto agendado.<br/>Fique atento às convocações!
+              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
+                Nenhuma convocação ativa.<br/>Aguarde o técnico!
               </p>
             </div>
           )}
         </section>
 
-        {/* Action Button */}
+        {/* Tactical Action Button */}
         {activeMatch && (
           <div className="animate-slide-up delay-100">
             {!isConfirmed ? (
               <button 
                 onClick={() => currentPlayer && onToggleConfirm(currentPlayer.id)}
                 disabled={confirmedCount >= activeMatch.limit}
-                className="w-full h-16 btn-primary rounded-2xl flex items-center justify-center gap-3 shadow-xl disabled:opacity-50 disabled:grayscale transition-all active:scale-95"
+                className="w-full h-20 btn-elite rounded-3xl flex items-center justify-center gap-4 shadow-2xl shadow-primary/30 disabled:opacity-50 disabled:grayscale"
               >
-                <span className="material-symbols-outlined font-black text-[22px]">check_circle</span>
-                <span className="text-xs uppercase tracking-[0.2em] font-black italic">Confirmar Presença</span>
+                <span className="material-symbols-outlined font-black text-[28px] text-white">check_circle</span>
+                <span className="text-sm uppercase tracking-[0.2em] font-black italic text-white">Confirmar Presença</span>
               </button>
             ) : (
               <button 
                 onClick={() => currentPlayer && onToggleConfirm(currentPlayer.id)}
-                className="w-full h-16 bg-white border-2 border-slate-100 text-slate-400 rounded-2xl flex items-center justify-center gap-3 font-black uppercase tracking-widest text-[10px] active:scale-95 transition-all hover:text-primary hover:border-primary/20"
+                className="w-full h-18 bg-white border-2 border-slate-100 text-slate-400 rounded-3xl flex items-center justify-center gap-3 font-black uppercase tracking-widest text-[10px] active:scale-95 transition-all hover:text-primary hover:border-primary/20"
               >
                 <span className="material-symbols-outlined text-[22px]">cancel</span>
                 Retirar meu Nome
@@ -139,68 +139,68 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
           </div>
         )}
 
-        {/* User Status Bar */}
+        {/* Personal Stats & Status */}
         <section className="animate-slide-up delay-200">
           <div 
-            className="bg-white border border-slate-100 rounded-3xl p-5 flex items-center justify-between premium-shadow active:scale-[0.98] transition-all cursor-pointer"
             onClick={() => onNavigate('profile')}
+            className="bg-white border border-slate-100 rounded-[2.5rem] p-6 flex items-center justify-between pro-shadow active:scale-[0.98] transition-all cursor-pointer"
           >
             <div className="flex items-center gap-4">
               <div className="relative">
                 <img 
                   src={currentPlayer?.avatar} 
-                  className="size-14 rounded-full border-2 border-slate-100 object-cover bg-slate-50" 
+                  className="size-16 rounded-full border-4 border-slate-50 object-cover shadow-sm" 
                   alt="Avatar"
                 />
                 {isConfirmed && (
-                  <div className="absolute -bottom-0.5 -right-0.5 size-5 bg-success rounded-full border-2 border-white flex items-center justify-center">
-                    <span className="material-symbols-outlined text-white text-[10px] font-black">done</span>
+                  <div className="absolute -bottom-1 -right-1 size-6 bg-success rounded-full border-4 border-white flex items-center justify-center">
+                    <span className="material-symbols-outlined text-white text-[12px] font-black">done</span>
                   </div>
                 )}
               </div>
               <div>
-                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Meu Status</p>
-                <p className="text-xs font-black text-secondary uppercase italic">
-                  {isConfirmed ? "Convite Aceito ✅" : "Aguardando Resposta ⏳"}
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Meu Status</p>
+                <p className={`text-sm font-black uppercase italic ${isConfirmed ? 'text-secondary' : 'text-slate-300'}`}>
+                  {isConfirmed ? "Convocado ✅" : "Pendente ⏳"}
                 </p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Taxa de Jogo</p>
-              <p className={`text-lg font-black italic ${userBalance > 0 ? 'text-primary' : 'text-success'}`}>
-                R$ {userBalance}
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Taxa</p>
+              <p className={`text-xl font-black italic ${userBalance > 0 ? 'text-primary' : 'text-success'}`}>
+                {userBalance > 0 ? `R$ ${userBalance}` : 'Pago'}
               </p>
             </div>
           </div>
         </section>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-4 animate-slide-up delay-300 pb-10">
+        {/* Global Stats Grid */}
+        <div className="grid grid-cols-2 gap-5 animate-slide-up delay-300 pb-12">
           <div 
             onClick={() => onNavigate('players')}
-            className="bg-white border border-slate-100 rounded-3xl p-5 space-y-4 premium-shadow group cursor-pointer active:scale-95 transition-all"
+            className="bg-white border border-slate-100 rounded-[2rem] p-6 space-y-4 pro-shadow group cursor-pointer active:scale-95 transition-all"
           >
-            <div className="size-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-              <span className="material-symbols-outlined text-[22px]">group</span>
+            <div className="size-12 bg-primary/5 rounded-2xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined text-[26px]">groups</span>
             </div>
             <div>
-              <p className="text-2xl font-black text-secondary leading-none italic">
+              <p className="text-3xl font-black text-secondary leading-none italic">
                 {activeMatch ? Math.max(activeMatch.limit - confirmedCount, 0) : '0'}
               </p>
-              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Vagas Livres</p>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2">Vagas Livres</p>
             </div>
           </div>
           
           <div 
             onClick={() => onNavigate('scout')}
-            className="bg-white border border-slate-100 rounded-3xl p-5 space-y-4 premium-shadow group cursor-pointer active:scale-95 transition-all"
+            className="bg-white border border-slate-100 rounded-[2rem] p-6 space-y-4 pro-shadow group cursor-pointer active:scale-95 transition-all"
           >
-            <div className="size-10 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary group-hover:scale-110 transition-transform">
-              <span className="material-symbols-outlined text-[22px]">military_tech</span>
+            <div className="size-12 bg-secondary/5 rounded-2xl flex items-center justify-center text-secondary group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined text-[26px]">military_tech</span>
             </div>
             <div>
-              <p className="text-2xl font-black text-secondary leading-none italic">#{players.findIndex(p => p.id === currentPlayer?.id) + 1 || '?'}</p>
-              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Minha Posição</p>
+              <p className="text-3xl font-black text-secondary leading-none italic">#{players.findIndex(p => p.id === currentPlayer?.id) + 1 || '?'}</p>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2">Meu Ranking</p>
             </div>
           </div>
         </div>
