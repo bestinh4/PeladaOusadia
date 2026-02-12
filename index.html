@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,8 +29,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
-    <!-- URL Oficial Corrigida dos Símbolos Materiais -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" />
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -56,13 +55,11 @@
                         'fade-in': 'fadeIn 0.4s ease-out forwards',
                         'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'scale-in': 'scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-                        'float': 'float 3s ease-in-out infinite',
                     },
                     keyframes: {
                         fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
                         slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
-                        scaleIn: { '0%': { transform: 'scale(0.95)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } },
-                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } }
+                        scaleIn: { '0%': { transform: 'scale(0.95)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } }
                     }
                 }
             }
@@ -72,52 +69,19 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+          font-size: 24px;
+        }
+
         body {
             background-color: #f8fafc;
             color: #173b6e;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Material Symbols Global Config */
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-            display: inline-block;
-            line-height: 1;
-            text-transform: none;
-            letter-spacing: normal;
-            word-wrap: normal;
-            white-space: nowrap;
-            direction: ltr;
-        }
-
-        .glass {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
         .pro-shadow {
             box-shadow: 0 20px 40px -15px rgba(23, 59, 110, 0.12);
-        }
-
-        .checker-bg {
-            background-image: 
-                linear-gradient(45deg, rgba(255,0,0,0.03) 25%, transparent 25%), 
-                linear-gradient(-45deg, rgba(255,0,0,0.03) 25%, transparent 25%), 
-                linear-gradient(45deg, transparent 75%, rgba(255,0,0,0.03) 75%), 
-                linear-gradient(-45deg, transparent 75%, rgba(255,0,0,0.03) 75%);
-            background-size: 40px 40px;
-        }
-
-        .btn-elite {
-            background: linear-gradient(135deg, #ff0000, #cc0000);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .btn-elite:active {
-            transform: scale(0.95) translateY(2px);
-            filter: brightness(0.9);
         }
 
         .stadium-overlay {
@@ -126,9 +90,9 @@
             background-position: center;
         }
 
-        input:focus, select:focus {
-            box-shadow: 0 0 0 4px rgba(255, 0, 0, 0.08);
-            border-color: #ff0000 !important;
+        .btn-elite {
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
     </style>
 </head>

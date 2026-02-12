@@ -48,7 +48,7 @@ export const playerService = {
       const snap = await getDoc(playerRef);
       
       if (!snap.exists()) {
-        // Check if this is the very first player to make them admin
+        // Verifica se é o primeiro usuário para torná-lo admin
         const q = query(collection(db, COLLECTION_NAME), limit(1));
         const firstSnap = await getDocs(q);
         const isFirst = firstSnap.empty;

@@ -13,7 +13,9 @@ interface ArenaScreenProps {
 const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, currentPlayer, onToggleConfirm, onNavigate }) => {
   const confirmedCount = players.filter(p => p.confirmed).length;
   const isConfirmed = currentPlayer?.confirmed || false;
-  const isAdmin = currentPlayer?.role === 'admin';
+  
+  // Se o usuário é admin OU se não existe nenhuma partida ativa, permitimos criar uma
+  const isAdmin = currentPlayer?.role === 'admin' || !activeMatch;
   
   const GAME_FEE = activeMatch?.price || 0;
   const userBalance = currentPlayer?.paid ? 0 : (isConfirmed ? GAME_FEE : 0);
@@ -31,6 +33,7 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
             <button 
               onClick={() => onNavigate('create-match')}
               className="size-11 bg-secondary text-white rounded-2xl flex items-center justify-center active:scale-90 transition-all shadow-xl shadow-secondary/20"
+              title="Nova Partida"
             >
               <span className="material-symbols-outlined text-[24px]">add</span>
             </button>
@@ -53,10 +56,12 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
         <section className="animate-slide-up">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Próximo Confronto</h2>
-            <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full">
-              <span className="size-1.5 bg-primary rounded-full animate-pulse"></span>
-              <span className="text-[8px] font-black text-primary uppercase tracking-widest">Inscrições Abertas</span>
-            </div>
+            {activeMatch && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full">
+                <span className="size-1.5 bg-primary rounded-full animate-pulse"></span>
+                <span className="text-[8px] font-black text-primary uppercase tracking-widest">Inscrições Abertas</span>
+              </div>
+            )}
           </div>
 
           {activeMatch ? (
@@ -104,13 +109,21 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
               </div>
             </div>
           ) : (
-            <div className="bg-white border-2 border-dashed border-slate-200 rounded-[3rem] p-16 flex flex-col items-center justify-center text-center animate-scale-in">
+            <div className="bg-white border-2 border-dashed border-slate-200 rounded-[3rem] p-12 flex flex-col items-center justify-center text-center animate-scale-in">
               <div className="size-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6">
-                <span className="material-symbols-outlined text-[40px]">event_busy</span>
+                <span className="material-symbols-outlined text-[40px]">sports_soccer</span>
               </div>
-              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
-                Nenhuma convocação ativa.<br/>Aguarde o técnico!
+              <p className="text-[11px] font-black text-secondary uppercase tracking-widest leading-relaxed mb-6">
+                Nenhuma convocação ativa.
               </p>
+              {isAdmin && (
+                <button 
+                  onClick={() => onNavigate('create-match')}
+                  className="px-8 h-12 bg-primary text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 active:scale-95 transition-all"
+                >
+                  Lançar Primeiro Jogo
+                </button>
+              )}
             </div>
           )}
         </section>
@@ -148,7 +161,7 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
             <div className="flex items-center gap-4">
               <div className="relative">
                 <img 
-                  src={currentPlayer?.avatar} 
+                  src={currentPlayer?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'} 
                   className="size-16 rounded-full border-4 border-slate-50 object-cover shadow-sm" 
                   alt="Avatar"
                 />
