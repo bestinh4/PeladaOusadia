@@ -7,6 +7,7 @@ import {
   query, 
   orderBy,
   setDoc,
+  getDoc,
   getDocs,
   FirestoreError
 } from "firebase/firestore";
@@ -14,6 +15,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../lib/firebase";
 import { Player } from "../types";
 import { MOCK_PLAYERS } from "../constants";
+import { User } from "firebase/auth";
 
 const COLLECTION_NAME = "players";
 
@@ -41,6 +43,40 @@ export const playerService = {
     );
   },
 
+  // Ensure user has a player profile in Firestore
+  ensurePlayerProfile: async (user: User) => {
+    try {
+      const playerRef = doc(db, COLLECTION_NAME, user.uid);
+      const snap = await getDoc(playerRef);
+      
+      if (!snap.exists()) {
+        const newPlayer: Player = {
+          id: user.uid,
+          name: user.displayName || 'Novo Atleta',
+          position: 'Midfielder',
+          level: 'Amador',
+          avatar: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
+          confirmed: false,
+          goals: 0,
+          rating: 60,
+          stats: {
+            pac: 50,
+            sho: 50,
+            pas: 50,
+            dri: 50,
+            def: 50,
+            phy: 50
+          }
+        };
+        await setDoc(playerRef, newPlayer);
+        console.log("Novo perfil de atleta criado para:", user.displayName);
+      }
+    } catch (error) {
+      console.error("Erro ao garantir perfil do atleta:", error);
+      throw error;
+    }
+  },
+
   // Toggle presence
   togglePresence: async (playerId: string, currentStatus: boolean) => {
     try {
@@ -57,13 +93,8 @@ export const playerService = {
   // Optimized Image Upload: Files go to Firebase Storage, URLs go to Firestore
   uploadAvatarToStorage: async (playerId: string, file: File): Promise<string> => {
     try {
-      // Create a unique reference for the player's avatar
       const storageRef = ref(storage, `avatars/${playerId}_${Date.now()}`);
-      
-      // Upload raw bytes (more efficient than Base64)
       const snapshot = await uploadBytes(storageRef, file);
-      
-      // Get the public CDN URL
       const downloadURL = await getDownloadURL(snapshot.ref);
       return downloadURL;
     } catch (error) {
@@ -85,7 +116,7 @@ export const playerService = {
     }
   },
 
-  // Initial seed
+  // Initial seed for demo purposes (only if collection is empty)
   seedPlayers: async () => {
     try {
       const q = collection(db, COLLECTION_NAME);

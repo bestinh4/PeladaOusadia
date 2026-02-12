@@ -57,10 +57,11 @@ function appReducer(state: AppState, action: AppAction): AppState {
         loading: false,
       };
     case 'NAVIGATE':
-      // If navigating to profile and no data provided, try to default to current player (players[0])
       let nextSelectedPlayer = state.selectedPlayer;
       if (action.screen === 'profile') {
-        nextSelectedPlayer = action.data || state.selectedPlayer || state.players[0] || null;
+        // Priority: Passed data > Current User found in players > Existing selected > First player
+        const currentUserInList = state.user ? state.players.find(p => p.id === state.user?.uid) : null;
+        nextSelectedPlayer = action.data || currentUserInList || state.selectedPlayer || state.players[0] || null;
       }
       
       return {
@@ -70,7 +71,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
     case 'SET_PLAYERS':
       const newPlayers = action.players;
-      // Also ensure selectedPlayer is kept in sync with the new players list
       const syncSelected = state.selectedPlayer 
           ? (newPlayers.find(p => p.id === state.selectedPlayer?.id) || state.selectedPlayer)
           : (state.currentScreen === 'profile' ? newPlayers[0] : null);
@@ -125,21 +125,32 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (loading) return;
+    
     if (isDemoMode) {
       const saved = localStorage.getItem('oa_players');
       dispatch({ type: 'SET_PLAYERS', players: saved ? JSON.parse(saved) : MOCK_PLAYERS });
       dispatch({ type: 'SET_ERROR', error: null });
       return;
     }
+    
     if (!user) {
       dispatch({ type: 'SET_PLAYERS', players: [] });
       return;
     }
+
     let unsubscribePlayers: (() => void) | undefined;
+    
     const initData = async () => {
       try {
         dispatch({ type: 'SET_ERROR', error: null });
+        
+        // 1. First, ensure user has a profile in Firestore
+        await playerService.ensurePlayerProfile(user);
+        
+        // 2. Seed mock data if DB is empty
         await playerService.seedPlayers();
+        
+        // 3. Subscribe to real-time updates
         unsubscribePlayers = playerService.subscribeToPlayers(
           (data) => dispatch({ type: 'SET_PLAYERS', players: data }),
           (err) => {
@@ -153,6 +164,7 @@ const App: React.FC = () => {
         dispatch({ type: 'SET_ERROR', error: err.message });
       }
     };
+
     initData();
     return () => unsubscribePlayers?.();
   }, [user, isDemoMode, loading]);
@@ -226,13 +238,18 @@ const App: React.FC = () => {
         </div>
       );
     }
+    
     if (loading) return <ScreenLoader />;
-    const currentPlayer = players.length > 0 ? players[0] : null;
+    
+    // Logic: If logged in, find the player with matching UID. If demo mode, use first.
+    const currentPlayer = user 
+      ? players.find(p => p.id === user.uid) 
+      : (isDemoMode && players.length > 0 ? players[0] : null);
 
     return (
       <Suspense fallback={<ScreenLoader />}>
         {currentScreen === 'login' && <LoginScreen onLogin={() => navigateTo('home')} onDemoMode={() => dispatch({ type: 'SET_DEMO_MODE', enabled: true })} />}
-        {currentScreen === 'home' && <ArenaScreen players={players} currentPlayer={currentPlayer} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} />}
+        {currentScreen === 'home' && <ArenaScreen players={players} currentPlayer={currentPlayer || null} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} />}
         {currentScreen === 'players' && <PlayerListScreen players={players} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} />}
         {currentScreen === 'scout' && <ScoutScreen players={players} onNavigate={navigateTo} />}
         {currentScreen === 'draw' && <DrawScreen players={players} onNavigate={navigateTo} />}
@@ -240,8 +257,7 @@ const App: React.FC = () => {
         {currentScreen === 'profile' && selectedPlayer ? (
           <ProfileScreen player={selectedPlayer} players={players} onNavigate={navigateTo} onUpdateAvatar={handleUpdateAvatar} />
         ) : currentScreen === 'profile' ? (
-          // Fallback if somehow still null during profile screen
-          <ArenaScreen players={players} currentPlayer={currentPlayer} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} />
+          <ArenaScreen players={players} currentPlayer={currentPlayer || null} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} />
         ) : null}
       </Suspense>
     );
