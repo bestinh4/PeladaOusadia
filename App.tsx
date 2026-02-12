@@ -9,6 +9,7 @@ import BottomNav from './components/BottomNav';
 
 // Lazy load screens
 const LoginScreen = lazy(() => import('./screens/LoginScreen'));
+const RegistrationScreen = lazy(() => import('./screens/RegistrationScreen'));
 const ArenaScreen = lazy(() => import('./screens/ArenaScreen'));
 const PlayerListScreen = lazy(() => import('./screens/PlayerListScreen'));
 const ScoutScreen = lazy(() => import('./screens/ScoutScreen'));
@@ -28,7 +29,7 @@ interface AppState {
 }
 
 type AppAction =
-  | { type: 'SET_AUTH'; user: User | null }
+  | { type: 'SET_AUTH'; user: User | null; needsRegistration?: boolean }
   | { type: 'NAVIGATE'; screen: Screen; data?: any }
   | { type: 'SET_PLAYERS'; players: Player[] }
   | { type: 'SET_MATCH'; match: Match | null }
@@ -50,7 +51,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         user: action.user,
-        currentScreen: action.user ? 'home' : 'login',
+        currentScreen: action.user ? (action.needsRegistration ? 'registration' : 'home') : 'login',
         loading: false,
       };
     case 'NAVIGATE':
@@ -85,22 +86,29 @@ const App: React.FC = () => {
   const { user, currentScreen, players, activeMatch, selectedPlayer, loading, error } = state;
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
-      dispatch({ type: 'SET_AUTH', user: firebaseUser });
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const profile = await playerService.getPlayerProfile(firebaseUser.uid);
+        dispatch({ 
+          type: 'SET_AUTH', 
+          user: firebaseUser, 
+          needsRegistration: !profile 
+        });
+      } else {
+        dispatch({ type: 'SET_AUTH', user: null });
+      }
     });
     return () => unsubscribeAuth();
   }, []);
 
   useEffect(() => {
-    if (loading || !user) return;
+    if (loading || !user || currentScreen === 'registration') return;
 
     let unsubscribePlayers: (() => void) | undefined;
     let unsubscribeMatch: (() => void) | undefined;
     
     const initData = async () => {
       try {
-        await playerService.ensurePlayerProfile(user);
-        
         unsubscribePlayers = playerService.subscribeToPlayers(
           (data) => dispatch({ type: 'SET_PLAYERS', players: data }),
           (err) => dispatch({ type: 'SET_ERROR', error: err.message })
@@ -120,13 +128,12 @@ const App: React.FC = () => {
       unsubscribePlayers?.();
       unsubscribeMatch?.();
     };
-  }, [user, loading]);
+  }, [user, loading, currentScreen]);
 
   const navigateTo = useCallback((screen: Screen, data?: any) => {
     const currentPlayer = players.find(p => p.id === user?.uid);
-    const isAdmin = currentPlayer?.role === 'admin';
+    const isAdmin = currentPlayer?.role === 'admin' || user?.email === 'diiogo49@gmail.com';
 
-    // Rota Protegida: Apenas ADM acessa Financeiro e Criação de Partida
     if ((screen === 'finance' || screen === 'create-match') && !isAdmin) {
       alert("Acesso restrito ao Administrador.");
       dispatch({ type: 'NAVIGATE', screen: 'home' });
@@ -183,10 +190,9 @@ const App: React.FC = () => {
 
     return (
       <Suspense fallback={<ScreenLoader />}>
-        {currentScreen === 'login' && (
-          <LoginScreen 
-            onLogin={() => navigateTo('home')} 
-          />
+        {currentScreen === 'login' && <LoginScreen onLogin={() => {}} />}
+        {currentScreen === 'registration' && user && (
+          <RegistrationScreen user={user} onComplete={() => navigateTo('home')} />
         )}
         {currentScreen === 'home' && (
           <ArenaScreen 
@@ -219,12 +225,10 @@ const App: React.FC = () => {
   return (
     <div className="flex justify-center min-h-screen bg-slate-100 lg:py-6 overflow-hidden">
       <div className="w-full max-w-none md:max-w-[430px] h-screen md:h-[932px] md:max-h-[95vh] bg-background shadow-2xl relative flex flex-col overflow-hidden md:rounded-[48px] border-none md:border-4 md:border-white transition-all">
-        
         <div className="flex-1 overflow-hidden relative">
           {renderScreen()}
         </div>
-
-        {user && currentScreen !== 'login' && (
+        {user && currentScreen !== 'login' && currentScreen !== 'registration' && (
           <div className="shrink-0 z-50">
             <BottomNav activeScreen={currentScreen} onNavigate={navigateTo} />
           </div>

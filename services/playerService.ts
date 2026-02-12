@@ -43,47 +43,46 @@ export const playerService = {
     );
   },
 
-  ensurePlayerProfile: async (user: User) => {
-    try {
-      const playerRef = doc(db, COLLECTION_NAME, user.uid);
-      const snap = await getDoc(playerRef);
-      
-      const isAdminEmail = user.email === ADMIN_EMAIL;
+  getPlayerProfile: async (uid: string) => {
+    const snap = await getDoc(doc(db, COLLECTION_NAME, uid));
+    return snap.exists() ? (snap.data() as Player) : null;
+  },
 
-      if (!snap.exists()) {
-        // Verifica se é o primeiro usuário para torná-lo admin como fallback universal
-        const q = query(collection(db, COLLECTION_NAME), limit(1));
-        const firstSnap = await getDocs(q);
-        const isFirst = firstSnap.empty;
+  createPlayerProfile: async (user: User, name: string, position: Player['position']) => {
+    const playerRef = doc(db, COLLECTION_NAME, user.uid);
+    const isAdminEmail = user.email === ADMIN_EMAIL;
+    
+    // Verifica se é o primeiro usuário para ser admin
+    const q = query(collection(db, COLLECTION_NAME), limit(1));
+    const firstSnap = await getDocs(q);
+    const isFirst = firstSnap.empty;
 
-        const newPlayer: Player = {
-          id: user.uid,
-          name: user.displayName || 'Novo Atleta',
-          position: 'Midfielder',
-          level: 'Amador',
-          avatar: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
-          confirmed: false,
-          paid: false,
-          role: (isFirst || isAdminEmail) ? 'admin' : 'player',
-          goals: 0,
-          assists: 0,
-          matches: 0,
-          rating: 60,
-          stats: {
-            pac: 50, sho: 50, pas: 50, dri: 50, def: 50, phy: 50
-          }
-        };
-        await setDoc(playerRef, newPlayer);
-      } else {
-        // Se o perfil já existe mas o e-mail é o do mestre, garante que ele seja Admin
-        const currentData = snap.data();
-        if (isAdminEmail && currentData?.role !== 'admin') {
-          await updateDoc(playerRef, { role: 'admin' });
-        }
+    const newPlayer: Player = {
+      id: user.uid,
+      name: name,
+      position: position,
+      avatar: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
+      confirmed: false,
+      paid: false,
+      role: (isFirst || isAdminEmail) ? 'admin' : 'player',
+      goals: 0,
+      assists: 0,
+      matches: 0,
+      rating: 60,
+      stats: {
+        pac: 50, sho: 50, pas: 50, dri: 50, def: 50, phy: 50
       }
-    } catch (error) {
-      console.error("Erro ao garantir perfil:", error);
-      throw error;
+    };
+    await setDoc(playerRef, newPlayer);
+    return newPlayer;
+  },
+
+  ensurePlayerProfile: async (user: User) => {
+    const isAdminEmail = user.email === ADMIN_EMAIL;
+    const profile = await playerService.getPlayerProfile(user.uid);
+    
+    if (profile && isAdminEmail && profile.role !== 'admin') {
+      await updateDoc(doc(db, COLLECTION_NAME, user.uid), { role: 'admin' });
     }
   },
 

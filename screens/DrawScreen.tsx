@@ -1,5 +1,5 @@
 
-import React, { useMemo, useReducer } from 'react';
+import React, { useMemo, useReducer, useEffect } from 'react';
 import { Player, Screen } from '../types';
 
 interface DrawScreenProps {
@@ -15,18 +15,15 @@ interface TeamResult {
 
 interface DrawState {
   numTeams: number;
-  balanceLevels: boolean;
   teams: TeamResult[];
 }
 
 type DrawAction =
   | { type: 'SET_NUM_TEAMS'; count: number }
-  | { type: 'TOGGLE_BALANCE' }
   | { type: 'SET_TEAMS'; teams: TeamResult[] };
 
 const initialDrawState: DrawState = {
   numTeams: 2,
-  balanceLevels: true,
   teams: [],
 };
 
@@ -34,8 +31,6 @@ function drawReducer(state: DrawState, action: DrawAction): DrawState {
   switch (action.type) {
     case 'SET_NUM_TEAMS':
       return { ...state, numTeams: action.count };
-    case 'TOGGLE_BALANCE':
-      return { ...state, balanceLevels: !state.balanceLevels };
     case 'SET_TEAMS':
       return { ...state, teams: action.teams };
     default:
@@ -45,18 +40,28 @@ function drawReducer(state: DrawState, action: DrawAction): DrawState {
 
 const DrawScreen: React.FC<DrawScreenProps> = ({ players, onNavigate }) => {
   const [state, dispatch] = useReducer(drawReducer, initialDrawState);
-  const { numTeams, balanceLevels, teams } = state;
+  const { numTeams, teams } = state;
 
   const confirmedPlayers = useMemo(() => players.filter(p => p.confirmed), [players]);
 
+  // Sugere automaticamente o número de times baseado no mini campo 7x7
+  useEffect(() => {
+    if (confirmedPlayers.length > 0) {
+      const suggested = Math.max(2, Math.floor(confirmedPlayers.length / 7));
+      dispatch({ type: 'SET_NUM_TEAMS', count: suggested });
+    }
+  }, [confirmedPlayers.length]);
+
   const handleDraw = () => {
     let pool = [...confirmedPlayers];
-    if (pool.length < numTeams) {
-      alert(`Necessário pelo menos ${numTeams} jogadores confirmados.`);
+    if (pool.length < numTeams * 6) { // Pelo menos 6 jogadores por time (permitindo time sem goleiro)
+      alert(`Poucos jogadores para ${numTeams} times. Cada time deve ter pelo menos 6 jogadores de linha.`);
       return;
     }
 
-    pool = pool.sort(() => Math.random() - 0.5);
+    // Separa goleiros dos jogadores de linha
+    const gks = pool.filter(p => p.position === 'Goalkeeper').sort(() => Math.random() - 0.5);
+    const outfield = pool.filter(p => p.position !== 'Goalkeeper').sort((a, b) => b.rating - a.rating);
 
     const newTeams: TeamResult[] = Array.from({ length: numTeams }, (_, i) => ({
       name: `Time ${String.fromCharCode(65 + i)}`,
@@ -64,19 +69,31 @@ const DrawScreen: React.FC<DrawScreenProps> = ({ players, onNavigate }) => {
       average: 0,
     }));
 
-    if (balanceLevels) {
-      pool.sort((a, b) => b.rating - a.rating);
-      pool.forEach((player, index) => {
-        const cycle = Math.floor(index / numTeams);
-        const position = index % numTeams;
-        const teamIndex = cycle % 2 === 0 ? position : (numTeams - 1) - position;
+    // Distribui goleiros primeiro (um por time até acabarem)
+    gks.forEach((gk, index) => {
+      if (index < numTeams) {
+        newTeams[index].players.push(gk);
+      } else {
+        // Se sobrarem goleiros, viram jogadores de linha no sorteio (fallback)
+        outfield.push(gk);
+      }
+    });
+
+    // Sorteio equilibrado dos jogadores de linha (Serpente / Snake draft)
+    outfield.sort((a, b) => b.rating - a.rating).forEach((player, index) => {
+      const cycle = Math.floor(index / numTeams);
+      const position = index % numTeams;
+      const teamIndex = cycle % 2 === 0 ? position : (numTeams - 1) - position;
+      
+      // Limite de 7 por time (Regra do Mini Campo)
+      if (newTeams[teamIndex].players.length < 7) {
         newTeams[teamIndex].players.push(player);
-      });
-    } else {
-      pool.forEach((player, index) => {
-        newTeams[index % numTeams].players.push(player);
-      });
-    }
+      } else {
+        // Se transbordar (excesso de jogadores), tenta colocar em outro time que tenha vaga
+        const availableTeam = newTeams.find(t => t.players.length < 7);
+        if (availableTeam) availableTeam.players.push(player);
+      }
+    });
 
     newTeams.forEach(team => {
       const sum = team.players.reduce((acc, p) => acc + p.rating, 0);
@@ -89,11 +106,12 @@ const DrawScreen: React.FC<DrawScreenProps> = ({ players, onNavigate }) => {
   const handleShare = () => {
     if (teams.length === 0) return;
     
-    let text = "*⚽ ESCALAÇÃO VATRENI MANAGER*\n\n";
+    let text = "*⚽ ESCALAÇÃO MINI CAMPO (7x7) *\n\n";
     teams.forEach(t => {
-      text += `*${t.name.toUpperCase()}* (Média: ${t.average})\n`;
+      const hasGk = t.players.some(p => p.position === 'Goalkeeper');
+      text += `*${t.name.toUpperCase()}* ${!hasGk ? '_(Sem Goleiro)_' : ''}\n`;
       t.players.forEach(p => {
-        text += `- ${p.name} (${p.position})\n`;
+        text += `- ${p.name} (${p.position === 'Goalkeeper' ? 'Goleiro' : 'Linha'})\n`;
       });
       text += "\n";
     });
@@ -109,19 +127,17 @@ const DrawScreen: React.FC<DrawScreenProps> = ({ players, onNavigate }) => {
         <button onClick={() => onNavigate('home')} className="size-9 sm:size-10 bg-slate-50 text-secondary rounded-xl flex items-center justify-center active:scale-90 transition-all">
           <span className="material-symbols-outlined text-[20px] sm:text-[24px]">arrow_back</span>
         </button>
-        <h2 className="text-lg sm:text-xl font-black text-secondary italic tracking-tighter">Sorteio de Times</h2>
+        <h2 className="text-lg sm:text-xl font-black text-secondary italic tracking-tighter">Sorteio 7x7</h2>
         <div className="size-9 sm:size-10"></div>
       </header>
 
       <div className="flex-1 overflow-y-auto no-scrollbar pb-36">
         <div className="px-4 sm:px-6 py-6 sm:py-8 animate-slide-up">
-          <h3 className="text-[9px] sm:text-[11px] font-black text-slate-300 uppercase tracking-widest mb-4">Configuração Técnica</h3>
-          
           <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 space-y-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
-                <p className="text-xs sm:text-sm font-black text-secondary uppercase">Número de Times</p>
-                <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">{confirmedPlayers.length} Confirmados</p>
+                <p className="text-xs sm:text-sm font-black text-secondary uppercase">Quantidade de Times</p>
+                <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">{confirmedPlayers.length} Atletas • Mini Campo</p>
               </div>
               <div className="flex items-center gap-3 sm:gap-4 bg-slate-50 p-1.5 sm:p-2 rounded-2xl border border-slate-100">
                 <button onClick={() => dispatch({ type: 'SET_NUM_TEAMS', count: Math.max(2, numTeams - 1) })} className="size-8 bg-white border border-slate-200 rounded-xl text-secondary font-black active:scale-90 transition-all">-</button>
@@ -129,71 +145,40 @@ const DrawScreen: React.FC<DrawScreenProps> = ({ players, onNavigate }) => {
                 <button onClick={() => dispatch({ type: 'SET_NUM_TEAMS', count: Math.min(6, numTeams + 1) })} className="size-8 bg-secondary text-white rounded-xl font-black active:scale-90 transition-all">+</button>
               </div>
             </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm font-black text-secondary flex items-center gap-2 uppercase">
-                  Balancear por Nível
-                  <span className="material-symbols-outlined text-amber-500 text-[12px] sm:text-[14px]">star</span>
-                </p>
-                <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">Algoritmo de Equilíbrio</p>
-              </div>
-              <button 
-                onClick={() => dispatch({ type: 'TOGGLE_BALANCE' })} 
-                className={`w-11 sm:w-12 h-5 sm:h-6 rounded-full relative transition-all duration-300 ${balanceLevels ? 'bg-primary' : 'bg-slate-200'}`}
-              >
-                <div className={`absolute top-0.5 sm:top-1 size-4 bg-white rounded-full transition-all shadow-sm ${balanceLevels ? 'left-6 sm:left-7' : 'left-1'}`}></div>
-              </button>
-            </div>
           </div>
         </div>
 
         <div className="px-4 sm:px-6 space-y-6 animate-slide-up delay-100">
-          <div className="flex items-center justify-between">
-            <h3 className="text-[9px] sm:text-[11px] font-black text-slate-300 uppercase tracking-widest">Convocação Gerada</h3>
-            {teams.length > 0 && (
-              <button 
-                onClick={handleShare}
-                className="text-[9px] sm:text-[10px] font-black text-success flex items-center gap-1.5 uppercase tracking-widest hover:brightness-90 transition-all active:scale-95 bg-success/10 px-3 py-1.5 rounded-full"
-              >
-                <span className="material-symbols-outlined text-[16px]">content_copy</span>
-                Copiar Escalação
-              </button>
-            )}
-          </div>
-
           {teams.length === 0 ? (
             <div className="bg-white border-2 border-dashed border-slate-200 rounded-[2.5rem] p-12 text-center shadow-inner">
               <div className="size-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-200">
                 <span className="material-symbols-outlined text-[32px]">shuffle</span>
               </div>
-              <p className="text-[10px] sm:text-xs text-slate-300 font-black uppercase tracking-widest leading-relaxed">Clique no botão abaixo para<br/>realizar o sorteio cirúrgico</p>
+              <p className="text-[10px] sm:text-xs text-slate-300 font-black uppercase tracking-widest leading-relaxed">O sorteio prioriza goleiros.<br/>Se faltar, o time fica com 6 jogadores.</p>
             </div>
           ) : (
             <div className="space-y-6">
+              <div className="flex justify-end">
+                <button onClick={handleShare} className="text-[10px] font-black text-success flex items-center gap-2 bg-success/5 px-4 py-2 rounded-xl">
+                  <span className="material-symbols-outlined text-[18px]">share</span> Compartilhar
+                </button>
+              </div>
               {teams.map((team, idx) => (
-                <div key={idx} className="bg-white border border-slate-100 rounded-[2.2rem] overflow-hidden animate-scale-in shadow-md hover:border-primary/30 transition-all">
-                  <div className="px-6 py-4 flex items-center justify-between bg-slate-50/50 border-b border-slate-100">
-                    <div className="flex items-center gap-3">
-                      <div className="size-10 bg-secondary text-white rounded-xl flex items-center justify-center font-black italic shadow-lg shadow-secondary/20">{team.name.split(' ')[1]}</div>
-                      <span className="text-sm font-black text-secondary uppercase italic tracking-tight">{team.name}</span>
-                    </div>
-                    <div className="flex items-center gap-1 px-3 py-1 bg-white rounded-full border border-slate-100">
-                      <span className="text-[10px] font-black text-secondary">{team.average}</span>
-                      <span className="material-symbols-outlined text-amber-500 text-[12px]">star</span>
-                    </div>
+                <div key={idx} className="bg-white border border-slate-100 rounded-[2.2rem] overflow-hidden animate-scale-in shadow-md">
+                  <div className="px-6 py-4 flex items-center justify-between bg-slate-50/50">
+                    <span className="text-sm font-black text-secondary uppercase italic tracking-tight">{team.name}</span>
+                    {!team.players.some(p => p.position === 'Goalkeeper') && (
+                      <span className="text-[8px] font-black bg-primary text-white px-2 py-0.5 rounded">SEM GOLEIRO</span>
+                    )}
                   </div>
-                  <div className="p-5 space-y-4">
+                  <div className="p-5 space-y-3">
                     {team.players.map(p => (
-                      <div key={p.id} className="flex items-center justify-between group">
+                      <div key={p.id} className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <img src={p.avatar} className="size-9 rounded-full border border-slate-100 object-cover" alt={p.name} />
-                          <div className="flex flex-col">
-                            <span className="text-xs font-bold text-secondary uppercase tracking-tight truncate group-hover:text-primary transition-colors">{p.name}</span>
-                            <span className="text-[8px] font-black text-slate-400 uppercase">{p.position}</span>
-                          </div>
+                          <img src={p.avatar} className="size-8 rounded-full border border-slate-100" />
+                          <span className={`text-xs font-bold ${p.position === 'Goalkeeper' ? 'text-primary' : 'text-secondary'}`}>{p.name}</span>
                         </div>
-                        <div className="text-[10px] font-black text-primary italic">{p.rating}</div>
+                        <span className="text-[8px] font-black text-slate-300 uppercase">{p.position === 'Goalkeeper' ? 'GK' : 'Linha'}</span>
                       </div>
                     ))}
                   </div>
@@ -204,13 +189,13 @@ const DrawScreen: React.FC<DrawScreenProps> = ({ players, onNavigate }) => {
         </div>
       </div>
 
-      <div className="absolute bottom-6 sm:bottom-10 left-0 w-full px-4 sm:px-6 z-40 animate-slide-up pointer-events-none">
+      <div className="absolute bottom-6 left-0 w-full px-4 sm:px-6 z-40 pointer-events-none">
         <button 
           onClick={handleDraw}
-          className="w-full h-15 btn-primary rounded-2xl flex items-center justify-center gap-3 shadow-2xl pointer-events-auto active:scale-95 transition-all"
+          className="w-full h-16 bg-primary text-white rounded-2xl flex items-center justify-center gap-3 shadow-2xl pointer-events-auto active:scale-95 transition-all"
         >
-          <span className="material-symbols-outlined font-black text-[24px]">shuffle</span>
-          <span className="text-xs sm:text-sm uppercase tracking-widest font-black">Sortear Times de Elite</span>
+          <span className="material-symbols-outlined font-black">shuffle</span>
+          <span className="text-sm uppercase tracking-widest font-black">Gerar Escalação</span>
         </button>
       </div>
     </div>

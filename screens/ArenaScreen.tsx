@@ -13,8 +13,6 @@ interface ArenaScreenProps {
 const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, currentPlayer, onToggleConfirm, onNavigate }) => {
   const confirmedCount = players.filter(p => p.confirmed).length;
   const isConfirmed = currentPlayer?.confirmed || false;
-  
-  // Apenas o e-mail cadastrado terá isAdmin como true
   const isAdmin = currentPlayer?.role === 'admin';
   
   const GAME_FEE = activeMatch?.price || 0;
@@ -22,7 +20,8 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
 
   const handleInvite = () => {
     if (!activeMatch) return;
-    const text = `*⚽ CONVOCAÇÃO VATRENI MANAGER*\n\nEstamos recrutando para a próxima partida!\n\n📍 *Local:* ${activeMatch.location}\n📅 *Data:* ${activeMatch.date}\n⏰ *Hora:* ${activeMatch.time}\n💰 *Valor:* R$ ${activeMatch.price},00\n\n_Confirme sua presença pelo app!_`;
+    const appUrl = window.location.href;
+    const text = `*⚽ CONVOCAÇÃO VATRENI MANAGER*\n\nEstamos recrutando para a próxima partida!\n\n📍 *Local:* ${activeMatch.location}\n📅 *Data:* ${activeMatch.date}\n⏰ *Hora:* ${activeMatch.time}\n💰 *Valor:* R$ ${activeMatch.price},00\n\n_Confirme sua presença pelo app!_\n👉 ${appUrl}`;
     navigator.clipboard.writeText(text);
     alert("Convite copiado! Cole agora no grupo do WhatsApp para convocar o pessoal. 🚀");
   };
@@ -44,8 +43,6 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
                 <span className="material-symbols-outlined text-[24px]">share</span>
               </button>
           )}
-          
-          {/* Apenas ADM cria partidas */}
           {isAdmin && (
             <button 
               onClick={() => onNavigate('create-match')}
@@ -55,13 +52,10 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
               <span className="material-symbols-outlined text-[24px]">add</span>
             </button>
           )}
-
-          {/* Apenas ADM acessa o Cofre (Financeiro) */}
           {isAdmin && (
             <button 
               onClick={() => onNavigate('finance')}
               className="size-11 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-secondary shadow-sm active:scale-90 transition-all relative"
-              title="Financeiro"
             >
               <span className="material-symbols-outlined text-[24px]">payments</span>
               {players.some(p => !p.paid && p.confirmed) && (
@@ -89,7 +83,7 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
               <div className="relative z-10">
                 <div className="flex justify-between items-start mb-10">
                   <div className="px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-2xl border border-white/10 text-[9px] font-black text-white uppercase tracking-widest">
-                    {activeMatch.type}
+                    {activeMatch.type} (7x7)
                   </div>
                   <div className="text-right">
                     <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-0.5">Arena Price</p>

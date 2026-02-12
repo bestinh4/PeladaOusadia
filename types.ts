@@ -2,12 +2,11 @@
 export interface Player {
   id: string;
   name: string;
-  position: string;
-  level: string;
+  position: 'Goalkeeper' | 'Defender' | 'Midfielder' | 'Forward';
   avatar: string;
   confirmed: boolean;
   paid: boolean;
-  role: 'admin' | 'player'; // Added for permissions
+  role: 'admin' | 'player';
   goals: number;
   assists: number;
   matches: number;
@@ -36,4 +35,4 @@ export interface Match {
   createdAt: any;
 }
 
-export type Screen = 'login' | 'home' | 'players' | 'scout' | 'create-match' | 'profile' | 'draw' | 'finance';
+export type Screen = 'login' | 'registration' | 'home' | 'players' | 'scout' | 'create-match' | 'profile' | 'draw' | 'finance';

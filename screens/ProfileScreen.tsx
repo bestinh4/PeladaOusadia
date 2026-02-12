@@ -19,7 +19,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
   const [editData, setEditData] = useState({
     name: player.name,
     position: player.position,
-    level: player.level,
     club: player.club || '',
     number: player.number || 0,
     stats: { ...player.stats }
@@ -104,18 +103,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
       <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
         <div className="relative pt-12 pb-20 px-6 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-secondary/5 to-transparent pointer-events-none"></div>
-          <div className="absolute top-0 right-0 size-64 opacity-[0.03] checkerboard-pattern -rotate-12 pointer-events-none"></div>
           
           <div className="flex flex-col items-center relative z-10">
             <div className={`relative mb-8 group ${isOwnProfile ? 'cursor-pointer' : ''}`} onClick={handleAvatarClick}>
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
               <div className="size-40 rounded-full border-[8px] border-white shadow-2xl relative transition-transform group-hover:scale-105 active:scale-95 bg-slate-100 overflow-hidden">
                  <img src={player.avatar} className="size-full object-cover" alt={player.name} />
-                 {isOwnProfile && (
-                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-1">
-                     <span className="material-symbols-outlined">photo_camera</span>
-                   </div>
-                 )}
               </div>
               <div className="absolute -bottom-2 -right-2 size-14 bg-secondary text-white rounded-2xl border-4 border-white flex flex-col items-center justify-center shadow-xl rotate-6">
                  <span className="text-xl font-black italic leading-none">{player.rating}</span>
@@ -128,26 +121,25 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
                 <input 
                   value={editData.name}
                   onChange={(e) => setEditData({...editData, name: e.target.value})}
-                  className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 text-center text-lg font-black text-secondary focus:ring-4 focus:ring-primary/5 transition-all outline-none"
-                  placeholder="Nome Completo"
+                  className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 text-center text-lg font-black text-secondary outline-none"
+                  placeholder="Nome do Atleta"
                 />
-                <div className="flex gap-2">
-                  <select 
-                    value={editData.position}
-                    onChange={(e) => setEditData({...editData, position: e.target.value})}
-                    className="flex-1 h-12 bg-white border border-slate-200 rounded-2xl px-4 text-[10px] font-black uppercase tracking-widest text-secondary"
-                  >
-                    <option>Forward</option><option>Midfielder</option><option>Defender</option><option>Goalkeeper</option>
-                  </select>
-                </div>
+                <select 
+                  value={editData.position}
+                  onChange={(e) => setEditData({...editData, position: e.target.value as any})}
+                  className="w-full h-12 bg-white border border-slate-200 rounded-2xl px-4 text-[10px] font-black uppercase tracking-widest text-secondary"
+                >
+                  <option value="Goalkeeper">Goalkeeper</option>
+                  <option value="Defender">Defender</option>
+                  <option value="Midfielder">Midfielder</option>
+                  <option value="Forward">Forward</option>
+                </select>
               </div>
             ) : (
               <div className="text-center animate-slide-up">
                 <h1 className="text-4xl font-black text-secondary uppercase italic tracking-tighter mb-2 leading-none">{player.name}</h1>
                 <div className="flex items-center justify-center gap-3">
                   <span className="bg-secondary text-white px-5 py-2 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-secondary/20">{player.position}</span>
-                  <div className="h-5 w-px bg-slate-200"></div>
-                  <span className="text-slate-400 text-[9px] font-black uppercase tracking-widest">{player.level}</span>
                 </div>
               </div>
             )}
@@ -162,8 +154,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
           ].map((s, idx) => (
             <div 
               key={s.label} 
-              className={`rounded-[2rem] p-6 flex flex-col items-center justify-center shadow-xl animate-scale-in transition-transform hover:scale-105 active:scale-95 ${s.color}`}
-              style={{ animationDelay: `${idx * 0.1}s` }}
+              className={`rounded-[2rem] p-6 flex flex-col items-center justify-center shadow-xl ${s.color}`}
             >
               <span className="text-3xl font-black italic mb-1 leading-none">{s.val}</span>
               <span className="text-[7px] font-black uppercase tracking-[0.3em] opacity-60 text-center">{s.label}</span>
@@ -176,13 +167,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
             <h3 className="text-lg font-black text-secondary italic uppercase">Technical Core</h3>
             <div className="flex items-center gap-2 bg-amber-500/10 px-4 py-2 rounded-2xl border border-amber-500/20">
               <span className="material-symbols-outlined text-amber-500 text-[18px] fill-current">star</span>
-              <span className="text-[10px] font-black text-amber-600 tracking-tighter">{displayRating} Elite Rank</span>
+              <span className="text-[10px] font-black text-amber-600 tracking-tighter">{displayRating} Rank</span>
             </div>
           </div>
 
           <div className="bg-white border border-slate-100 rounded-[3rem] p-8 space-y-8 premium-shadow relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full opacity-50 -z-0 pointer-events-none"></div>
-            
             {[
               { key: 'pac', label: 'Ritmo (PAC)', color: 'bg-primary' },
               { key: 'sho', label: 'Chute (SHO)', color: 'bg-rose-600' },
@@ -193,12 +182,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
             ].map((skill, idx) => {
               const value = isEditing ? (editData.stats as any)[skill.key] : (player.stats as any)[skill.key];
               return (
-                <div key={skill.key} className="space-y-4 relative z-10 animate-fade-in" style={{ animationDelay: `${idx * 0.05}s` }}>
+                <div key={skill.key} className="space-y-4 relative z-10">
                   <div className="flex justify-between items-end">
                     <span className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">{skill.label}</span>
                     <span className="text-2xl font-black text-secondary italic leading-none">{value}</span>
                   </div>
-                  
                   {isEditing ? (
                     <input 
                       type="range" min="0" max="100" value={value}
@@ -206,8 +194,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
                       className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-primary border border-slate-200"
                     />
                   ) : (
-                    <div className="w-full h-3 bg-slate-50 rounded-full overflow-hidden p-0.5 border border-slate-100 shadow-inner">
-                      <div className={`h-full ${skill.color} rounded-full transition-all duration-1000 ease-out shadow-sm`} style={{ width: `${value}%` }}></div>
+                    <div className="w-full h-3 bg-slate-50 rounded-full overflow-hidden p-0.5 border border-slate-100">
+                      <div className={`h-full ${skill.color} rounded-full transition-all duration-1000 ease-out`} style={{ width: `${value}%` }}></div>
                     </div>
                   )}
                 </div>
