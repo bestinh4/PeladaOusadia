@@ -18,6 +18,7 @@ import { Player } from "../types";
 import { User } from "firebase/auth";
 
 const COLLECTION_NAME = "players";
+const ADMIN_EMAIL = "diiogo49@gmail.com";
 
 export const playerService = {
   subscribeToPlayers: (
@@ -47,8 +48,10 @@ export const playerService = {
       const playerRef = doc(db, COLLECTION_NAME, user.uid);
       const snap = await getDoc(playerRef);
       
+      const isAdminEmail = user.email === ADMIN_EMAIL;
+
       if (!snap.exists()) {
-        // Verifica se é o primeiro usuário para torná-lo admin
+        // Verifica se é o primeiro usuário para torná-lo admin como fallback universal
         const q = query(collection(db, COLLECTION_NAME), limit(1));
         const firstSnap = await getDocs(q);
         const isFirst = firstSnap.empty;
@@ -61,7 +64,7 @@ export const playerService = {
           avatar: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
           confirmed: false,
           paid: false,
-          role: isFirst ? 'admin' : 'player',
+          role: (isFirst || isAdminEmail) ? 'admin' : 'player',
           goals: 0,
           assists: 0,
           matches: 0,
@@ -71,6 +74,12 @@ export const playerService = {
           }
         };
         await setDoc(playerRef, newPlayer);
+      } else {
+        // Se o perfil já existe mas o e-mail é o do mestre, garante que ele seja Admin
+        const currentData = snap.data();
+        if (isAdminEmail && currentData?.role !== 'admin') {
+          await updateDoc(playerRef, { role: 'admin' });
+        }
       }
     } catch (error) {
       console.error("Erro ao garantir perfil:", error);
