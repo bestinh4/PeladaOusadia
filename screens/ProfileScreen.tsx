@@ -25,7 +25,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
     stats: { ...player.stats }
   });
 
-  // Reset loading state if player avatar changes
   useEffect(() => {
     setImageLoaded(false);
   }, [player.avatar]);
@@ -42,7 +41,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
     const file = e.target.files?.[0];
     if (file) {
       setLoading(true);
-      setImageLoaded(false); // Reset to show placeholder during upload/update
+      setImageLoaded(false);
       try {
         await onUpdateAvatar(player.id, file);
       } finally {
@@ -77,14 +76,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
         <div className="text-center">
-          <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-0.5 leading-none">Vatreni</h2>
+          <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-0.5 leading-none">O<span className="text-primary">&</span>A Manager</h2>
           <p className="text-sm font-black text-secondary italic uppercase tracking-tighter">Pro Identity</p>
         </div>
         <div className="flex items-center gap-2">
           {isOwnProfile && (
              <button 
                 onClick={onLogout}
-                className="size-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center active:scale-90 transition-all border border-slate-100"
+                className="size-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center active:scale-90 border border-slate-100"
               >
                 <span className="material-symbols-outlined text-[20px]">logout</span>
               </button>
@@ -114,15 +113,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
           <div className="flex flex-col items-center relative z-10">
             <div className={`relative mb-8 group ${isOwnProfile ? 'cursor-pointer' : ''}`} onClick={handleAvatarClick}>
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
-              
               <div className="size-40 rounded-full border-[8px] border-white shadow-2xl relative transition-transform group-hover:scale-105 active:scale-95 bg-slate-100 overflow-hidden">
-                 {/* Placeholder Animado */}
                  {!imageLoaded && (
                    <div className="absolute inset-0 bg-slate-200 animate-pulse flex items-center justify-center">
-                     <span className="material-symbols-outlined text-slate-400 text-4xl animate-bounce">person</span>
+                     <span className="material-symbols-outlined text-slate-400 text-4xl">person</span>
                    </div>
                  )}
-                 
                  <img 
                    src={player.avatar} 
                    className={`size-full object-cover transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`} 
@@ -130,14 +126,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
                    loading="lazy"
                    onLoad={() => setImageLoaded(true)}
                  />
-
                  {isOwnProfile && (
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white backdrop-blur-[2px]">
                       <span className="material-symbols-outlined text-3xl">photo_camera</span>
                     </div>
                  )}
               </div>
-
               <div className="absolute -bottom-2 -right-2 size-14 bg-secondary text-white rounded-2xl border-4 border-white flex flex-col items-center justify-center shadow-xl rotate-6">
                  <span className="text-xl font-black italic leading-none">{player.rating}</span>
                  <span className="text-[7px] font-black uppercase tracking-tighter opacity-50">OVR</span>
@@ -149,25 +143,15 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
                 <input 
                   value={editData.name}
                   onChange={(e) => setEditData({...editData, name: e.target.value})}
-                  className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 text-center text-lg font-black text-secondary outline-none focus:border-primary transition-colors"
-                  placeholder="Nome do Atleta"
+                  className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 text-center text-lg font-black text-secondary focus:border-primary"
+                  placeholder="Nome"
                 />
-                <select 
-                  value={editData.position}
-                  onChange={(e) => setEditData({...editData, position: e.target.value as any})}
-                  className="w-full h-12 bg-white border border-slate-200 rounded-2xl px-4 text-[10px] font-black uppercase tracking-widest text-secondary focus:border-primary transition-colors"
-                >
-                  <option value="Goalkeeper">Goleiro</option>
-                  <option value="Defender">Defensor</option>
-                  <option value="Midfielder">Meio-Campo</option>
-                  <option value="Forward">Atacante</option>
-                </select>
               </div>
             ) : (
               <div className="text-center animate-slide-up">
                 <h1 className="text-4xl font-black text-secondary uppercase italic tracking-tighter mb-2 leading-none">{player.name}</h1>
                 <div className="flex items-center justify-center gap-3">
-                  <span className="bg-secondary text-white px-5 py-2 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-secondary/20">{player.position}</span>
+                  <span className="bg-secondary text-white px-5 py-2 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg">{player.position}</span>
                 </div>
               </div>
             )}
@@ -176,13 +160,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
 
         <div className="px-6 grid grid-cols-3 gap-4 mb-12 -mt-10 relative z-20">
           {[
-            { val: player.goals, label: 'Gols', color: 'bg-primary text-white shadow-primary/20' },
+            { val: player.goals, label: 'Gols', color: 'bg-primary text-white' },
             { val: player.assists, label: 'Assists', color: 'bg-white text-secondary border border-slate-100' },
-            { val: player.matches, label: 'Partidas', color: 'bg-secondary text-white shadow-secondary/20' }
+            { val: player.matches, label: 'Partidas', color: 'bg-secondary text-white' }
           ].map((s, idx) => (
             <div 
               key={s.label} 
-              className={`rounded-[2rem] p-6 flex flex-col items-center justify-center shadow-xl animate-scale-in transition-transform hover:scale-105 ${s.color}`}
+              className={`rounded-[2rem] p-6 flex flex-col items-center justify-center shadow-xl animate-scale-in ${s.color}`}
               style={{ animationDelay: `${idx * 0.1}s` }}
             >
               <span className="text-3xl font-black italic mb-1 leading-none">{s.val}</span>
@@ -193,7 +177,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
 
         <div className="px-6 space-y-8 animate-slide-up delay-300">
           <div className="flex items-center justify-between px-2">
-            <h3 className="text-lg font-black text-secondary italic uppercase">Technical Core</h3>
+            <h3 className="text-lg font-black text-secondary italic uppercase">Skills O<span className="text-primary">&</span>A</h3>
             <div className="flex items-center gap-2 bg-amber-500/10 px-4 py-2 rounded-2xl border border-amber-500/20">
               <span className="material-symbols-outlined text-amber-500 text-[18px] fill-current">star</span>
               <span className="text-[10px] font-black text-amber-600 tracking-tighter">{displayRating} Rank</span>

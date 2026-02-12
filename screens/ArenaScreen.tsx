@@ -21,7 +21,7 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
   const handleInvite = () => {
     if (!activeMatch) return;
     const appUrl = window.location.href;
-    const text = `*⚽ CONVOCAÇÃO VATRENI MANAGER*\n\nEstamos recrutando para a próxima partida!\n\n📍 *Local:* ${activeMatch.location}\n📅 *Data:* ${activeMatch.date}\n⏰ *Hora:* ${activeMatch.time}\n💰 *Valor:* R$ ${activeMatch.price},00\n\n_Confirme sua presença pelo app!_\n👉 ${appUrl}`;
+    const text = `*⚽ CONVOCAÇÃO OUSADIA & ALEGRIA*\n\nEstamos recrutando para a próxima partida!\n\n📍 *Local:* ${activeMatch.location}\n📅 *Data:* ${activeMatch.date}\n⏰ *Hora:* ${activeMatch.time}\n💰 *Valor:* R$ ${activeMatch.price},00\n\n_Confirme sua presença pelo app!_\n👉 ${appUrl}`;
     navigator.clipboard.writeText(text);
     alert("Convite copiado! Cole agora no grupo do WhatsApp para convocar o pessoal. 🚀");
   };
@@ -30,7 +30,7 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
     <div className="h-full bg-slate-50 overflow-y-auto no-scrollbar pb-36 px-6">
       <header className="flex items-center justify-between pt-10 pb-6 sticky top-0 z-40 bg-slate-50/80 backdrop-blur-xl -mx-6 px-6">
         <div>
-          <h1 className="text-2xl font-black text-secondary italic tracking-tighter leading-none">VATRENI</h1>
+          <h1 className="text-2xl font-black text-secondary italic tracking-tighter leading-none">O<span className="text-primary">&</span>A</h1>
           <p className="text-[9px] font-black text-primary uppercase tracking-[0.4em] mt-1.5">Elite Manager</p>
         </div>
         <div className="flex items-center gap-2">

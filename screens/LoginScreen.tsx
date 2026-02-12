@@ -20,8 +20,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     try {
       await signInWithPopup(auth, googleProvider);
       setLoginSuccess(true);
-      // O onAuthStateChanged no App.tsx cuidará da mudança de tela, 
-      // mas o delay visual ajuda na fluidez da animação de fade-out.
       setTimeout(() => {
         onLogin();
       }, 500);
@@ -71,26 +69,23 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
 
         <div className="text-center">
           <h1 className="text-3xl font-black italic tracking-tighter text-secondary uppercase leading-none">
-            Vatreni <span className="text-primary">Manager</span>
+            Ousadia <span className="text-primary">&</span> Alegria
           </h1>
-          <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] mt-3">Versão de Produção 1.0</p>
+          <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] mt-3">Elite Manager • 1.0</p>
         </div>
 
         {error?.code === 'auth/unauthorized-domain' ? (
           <div className="w-full p-6 bg-amber-50 border border-amber-200 rounded-3xl animate-shake">
             <h4 className="text-amber-800 text-[11px] font-black uppercase mb-2">Ação Necessária:</h4>
             <p className="text-[10px] text-amber-700 leading-relaxed mb-4 font-medium">
-              O domínio <b>{error.domain}</b> precisa ser autorizado no seu Console do Firebase para permitir o login.
+              O domínio <b>{error.domain}</b> precisa ser autorizado no seu Console do Firebase.
             </p>
             <button 
               onClick={copyDomain}
               className="w-full h-10 bg-amber-200 text-amber-800 rounded-xl text-[10px] font-black uppercase hover:bg-amber-300 transition-colors"
             >
-              Copiar Domínio para o Firebase
+              Copiar Domínio
             </button>
-            <p className="text-[8px] text-amber-500 mt-4 text-center italic">
-              Authentication &gt; Configurações &gt; Domínios Autorizados
-            </p>
           </div>
         ) : (
           <div className="w-full space-y-4">
@@ -124,7 +119,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
         )}
 
         <div className="text-[8px] text-slate-300 font-bold uppercase tracking-widest text-center mt-4">
-           © 2024 Vatreni Sports Management
+           © 2024 O&A Sports Management
         </div>
       </div>
     </div>
