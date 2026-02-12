@@ -25,6 +25,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
     stats: { ...player.stats }
   });
 
+  // Importante: Resetar o estado de imagem carregada quando a URL da foto muda
   useEffect(() => {
     setImageLoaded(false);
     setEditData({
@@ -34,7 +35,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
       number: player.number || 0,
       stats: { ...player.stats }
     });
-  }, [player]);
+  }, [player.id, player.avatar]); // Monitorar ID e URL da foto
 
   const isOwnProfile = currentPlayer?.id === player.id;
   const isAdmin = currentPlayer?.role === 'admin';
@@ -51,12 +52,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
       setImageLoaded(false);
       try {
         await onUpdateAvatar(player.id, file);
+        // O loading continua true até que o useEffect acima (player.avatar) 
+        // seja acionado e a NOVA imagem carregue no navegador.
       } catch (err) {
         console.error("Erro no upload:", err);
         alert("Erro ao enviar imagem. Verifique sua conexão.");
-      } finally {
         setLoading(false);
-        // Reseta o input para permitir selecionar a mesma foto novamente se necessário
+      } finally {
         if (fileInputRef.current) fileInputRef.current.value = '';
       }
     }
@@ -76,11 +78,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
     }
   };
 
+  // Se o upload terminou mas a imagem ainda não "bateu" no onLoad do navegador, mantemos o spinner
+  const showSpinner = loading || (player.avatar && !imageLoaded && isOwnProfile);
+
   const displayRating = (player.rating / 20).toFixed(1);
 
   return (
     <div className="h-full bg-background flex flex-col relative overflow-hidden">
-      {/* Input de arquivo oculto - ESSENCIAL PARA O UPLOAD */}
       <input 
         type="file" 
         ref={fileInputRef} 
@@ -139,16 +143,23 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
               <div className="size-40 rounded-full border-8 border-white shadow-xl relative transition-transform bg-slate-100 overflow-hidden">
                  <img 
                    src={player.avatar} 
-                   className={`size-full object-cover transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`} 
+                   className={`size-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`} 
                    alt={player.name}
-                   onLoad={() => setImageLoaded(true)}
+                   onLoad={() => {
+                     setImageLoaded(true);
+                     setLoading(false); // Garante que o loading pare quando a imagem aparecer
+                   }}
+                   onError={() => {
+                     setImageLoaded(true);
+                     setLoading(false);
+                   }}
                  />
                  
-                 {/* Estado de Carregamento (Overlay) */}
-                 {loading && (
-                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white backdrop-blur-sm">
+                 {/* Overlay de carregamento robusto */}
+                 {showSpinner && (
+                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white backdrop-blur-sm z-20">
                       <div className="size-8 border-4 border-white/30 border-t-white rounded-full animate-spin mb-2"></div>
-                      <span className="text-[8px] font-black uppercase tracking-widest">Enviando...</span>
+                      <span className="text-[8px] font-black uppercase tracking-widest">Sincronizando...</span>
                     </div>
                  )}
 

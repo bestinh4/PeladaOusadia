@@ -23,7 +23,7 @@ interface AppState {
   currentScreen: Screen;
   players: Player[];
   activeMatch: Match | null;
-  selectedPlayer: Player | null;
+  selectedPlayerId: string | null;
   loading: boolean;
   error: string | null;
 }
@@ -40,7 +40,7 @@ const initialState: AppState = {
   currentScreen: 'login',
   players: [],
   activeMatch: null,
-  selectedPlayer: null,
+  selectedPlayerId: null,
   loading: true,
   error: null,
 };
@@ -55,13 +55,12 @@ function appReducer(state: AppState, action: AppAction): AppState {
         loading: false,
       };
     case 'NAVIGATE':
-      const currentUserInList = state.user ? state.players.find(p => p.id === state.user?.uid) : null;
       return {
         ...state,
         currentScreen: action.screen,
-        selectedPlayer: action.screen === 'profile' 
-          ? (action.data || currentUserInList || state.players[0] || null) 
-          : state.selectedPlayer,
+        selectedPlayerId: action.screen === 'profile' 
+          ? (action.data?.id || state.user?.uid || state.players[0]?.id || null) 
+          : state.selectedPlayerId,
       };
     case 'SET_PLAYERS':
       return { ...state, players: action.players };
@@ -83,7 +82,7 @@ const ScreenLoader = () => (
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const { user, currentScreen, players, activeMatch, selectedPlayer, loading, error } = state;
+  const { user, currentScreen, players, activeMatch, selectedPlayerId, loading, error } = state;
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -160,8 +159,11 @@ const App: React.FC = () => {
         ? await playerService.uploadAvatarToStorage(id, file)
         : file;
       await playerService.updateAvatar(id, cdnUrl);
+      // O Firestore onSnapshot vai atualizar a lista 'players' e o 'selectedPlayer' refletirá isso automaticamente
     } catch (err: any) {
+      console.error("Avatar Update Error:", err);
       alert("Erro ao atualizar foto: " + err.message);
+      throw err; // Repassa para o componente tratar o loading
     }
   }, []);
 
@@ -187,6 +189,7 @@ const App: React.FC = () => {
     if (loading) return <ScreenLoader />;
     
     const currentPlayer = user ? players.find(p => p.id === user.uid) : null;
+    const selectedPlayer = players.find(p => p.id === selectedPlayerId) || currentPlayer;
 
     return (
       <Suspense fallback={<ScreenLoader />}>
