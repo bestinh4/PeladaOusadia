@@ -13,7 +13,8 @@ export default defineConfig({
         'react/jsx-runtime',
         'firebase/app',
         'firebase/auth',
-        'firebase/firestore'
+        'firebase/firestore',
+        'firebase/storage'
       ],
     },
   },
