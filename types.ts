@@ -6,6 +6,7 @@ export interface Player {
   level: string;
   avatar: string;
   confirmed: boolean;
+  paid: boolean; // Added for real financial control
   goals: number;
   assists?: number;
   matches?: number;
