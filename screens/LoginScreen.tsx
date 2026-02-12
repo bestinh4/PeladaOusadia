@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../lib/firebase";
 
@@ -9,14 +9,22 @@ interface LoginScreenProps {
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
   const [error, setError] = useState<{ code: string; message: string; domain?: string } | null>(null);
 
   const handleGoogleLogin = async () => {
+    if (isAuthenticating || loginSuccess) return;
+    
     setIsAuthenticating(true);
     setError(null);
     try {
       await signInWithPopup(auth, googleProvider);
-      onLogin();
+      setLoginSuccess(true);
+      // O onAuthStateChanged no App.tsx cuidará da mudança de tela, 
+      // mas o delay visual ajuda na fluidez da animação de fade-out.
+      setTimeout(() => {
+        onLogin();
+      }, 500);
     } catch (err: any) {
       console.error("Auth Error:", err);
       
@@ -44,7 +52,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="h-full flex flex-col items-center justify-center bg-white relative overflow-y-auto no-scrollbar py-10 px-6">
+    <div className={`h-full flex flex-col items-center justify-center bg-white relative overflow-y-auto no-scrollbar py-10 px-6 transition-all duration-500 ${loginSuccess ? 'animate-fade-out scale-105' : ''}`}>
       <div className="absolute inset-0 opacity-[0.05] checkerboard-pattern pointer-events-none"></div>
       
       <div className="w-full max-w-[380px] bg-white rounded-[3.5rem] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.1)] p-10 flex flex-col items-center gap-8 relative z-10 animate-scale-in border border-slate-100">
@@ -54,6 +62,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
              <div className="absolute inset-0 opacity-20 checkerboard-pattern scale-75"></div>
              <span className="material-symbols-outlined text-[56px] text-white z-10">sports_soccer</span>
           </div>
+          {loginSuccess && (
+            <div className="absolute -top-2 -right-2 size-10 bg-success rounded-full flex items-center justify-center border-4 border-white animate-scale-in shadow-lg">
+              <span className="material-symbols-outlined text-white text-[24px] font-black">check</span>
+            </div>
+          )}
         </div>
 
         <div className="text-center">
@@ -89,15 +102,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
 
             <button 
               onClick={handleGoogleLogin}
-              disabled={isAuthenticating}
-              className={`w-full h-16 bg-secondary text-white shadow-xl rounded-2xl flex items-center justify-center gap-4 active:scale-95 transition-all ${isAuthenticating ? 'opacity-50' : ''}`}
+              disabled={isAuthenticating || loginSuccess}
+              className={`w-full h-16 bg-secondary text-white shadow-xl rounded-2xl flex items-center justify-center gap-4 active:scale-95 transition-all ${isAuthenticating ? 'opacity-50' : ''} ${loginSuccess ? 'bg-success shadow-success/20' : ''}`}
             >
-               {isAuthenticating ? (
+               {isAuthenticating && !loginSuccess ? (
                  <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+               ) : loginSuccess ? (
+                 <span className="material-symbols-outlined font-black">check_circle</span>
                ) : (
                  <span className="material-symbols-outlined">login</span>
                )}
-               <span className="font-bold text-sm tracking-wide">Entrar com Google</span>
+               <span className="font-bold text-sm tracking-wide">
+                 {loginSuccess ? 'Acesso Concedido' : 'Entrar com Google'}
+               </span>
             </button>
             
             <p className="text-[9px] text-slate-300 text-center font-bold px-4">

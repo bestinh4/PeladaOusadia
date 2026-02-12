@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Player, Screen } from '../types';
 import { playerService } from '../services/playerService';
 
@@ -16,6 +16,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [editData, setEditData] = useState({
     name: player.name,
     position: player.position,
@@ -23,6 +24,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
     number: player.number || 0,
     stats: { ...player.stats }
   });
+
+  // Reset loading state if player avatar changes
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [player.avatar]);
 
   const isOwnProfile = currentPlayer?.id === player.id;
   const isAdmin = currentPlayer?.role === 'admin';
@@ -36,6 +42,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
     const file = e.target.files?.[0];
     if (file) {
       setLoading(true);
+      setImageLoaded(false); // Reset to show placeholder during upload/update
       try {
         await onUpdateAvatar(player.id, file);
       } finally {
@@ -107,9 +114,30 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
           <div className="flex flex-col items-center relative z-10">
             <div className={`relative mb-8 group ${isOwnProfile ? 'cursor-pointer' : ''}`} onClick={handleAvatarClick}>
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+              
               <div className="size-40 rounded-full border-[8px] border-white shadow-2xl relative transition-transform group-hover:scale-105 active:scale-95 bg-slate-100 overflow-hidden">
-                 <img src={player.avatar} className="size-full object-cover" alt={player.name} />
+                 {/* Placeholder Animado */}
+                 {!imageLoaded && (
+                   <div className="absolute inset-0 bg-slate-200 animate-pulse flex items-center justify-center">
+                     <span className="material-symbols-outlined text-slate-400 text-4xl animate-bounce">person</span>
+                   </div>
+                 )}
+                 
+                 <img 
+                   src={player.avatar} 
+                   className={`size-full object-cover transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`} 
+                   alt={player.name}
+                   loading="lazy"
+                   onLoad={() => setImageLoaded(true)}
+                 />
+
+                 {isOwnProfile && (
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white backdrop-blur-[2px]">
+                      <span className="material-symbols-outlined text-3xl">photo_camera</span>
+                    </div>
+                 )}
               </div>
+
               <div className="absolute -bottom-2 -right-2 size-14 bg-secondary text-white rounded-2xl border-4 border-white flex flex-col items-center justify-center shadow-xl rotate-6">
                  <span className="text-xl font-black italic leading-none">{player.rating}</span>
                  <span className="text-[7px] font-black uppercase tracking-tighter opacity-50">OVR</span>
@@ -121,18 +149,18 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
                 <input 
                   value={editData.name}
                   onChange={(e) => setEditData({...editData, name: e.target.value})}
-                  className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 text-center text-lg font-black text-secondary outline-none"
+                  className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 text-center text-lg font-black text-secondary outline-none focus:border-primary transition-colors"
                   placeholder="Nome do Atleta"
                 />
                 <select 
                   value={editData.position}
                   onChange={(e) => setEditData({...editData, position: e.target.value as any})}
-                  className="w-full h-12 bg-white border border-slate-200 rounded-2xl px-4 text-[10px] font-black uppercase tracking-widest text-secondary"
+                  className="w-full h-12 bg-white border border-slate-200 rounded-2xl px-4 text-[10px] font-black uppercase tracking-widest text-secondary focus:border-primary transition-colors"
                 >
-                  <option value="Goalkeeper">Goalkeeper</option>
-                  <option value="Defender">Defender</option>
-                  <option value="Midfielder">Midfielder</option>
-                  <option value="Forward">Forward</option>
+                  <option value="Goalkeeper">Goleiro</option>
+                  <option value="Defender">Defensor</option>
+                  <option value="Midfielder">Meio-Campo</option>
+                  <option value="Forward">Atacante</option>
                 </select>
               </div>
             ) : (
@@ -154,7 +182,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
           ].map((s, idx) => (
             <div 
               key={s.label} 
-              className={`rounded-[2rem] p-6 flex flex-col items-center justify-center shadow-xl ${s.color}`}
+              className={`rounded-[2rem] p-6 flex flex-col items-center justify-center shadow-xl animate-scale-in transition-transform hover:scale-105 ${s.color}`}
+              style={{ animationDelay: `${idx * 0.1}s` }}
             >
               <span className="text-3xl font-black italic mb-1 leading-none">{s.val}</span>
               <span className="text-[7px] font-black uppercase tracking-[0.3em] opacity-60 text-center">{s.label}</span>
@@ -182,7 +211,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
             ].map((skill, idx) => {
               const value = isEditing ? (editData.stats as any)[skill.key] : (player.stats as any)[skill.key];
               return (
-                <div key={skill.key} className="space-y-4 relative z-10">
+                <div key={skill.key} className="space-y-4 relative z-10 animate-fade-in" style={{ animationDelay: `${idx * 0.05}s` }}>
                   <div className="flex justify-between items-end">
                     <span className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">{skill.label}</span>
                     <span className="text-2xl font-black text-secondary italic leading-none">{value}</span>
@@ -195,7 +224,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
                     />
                   ) : (
                     <div className="w-full h-3 bg-slate-50 rounded-full overflow-hidden p-0.5 border border-slate-100">
-                      <div className={`h-full ${skill.color} rounded-full transition-all duration-1000 ease-out`} style={{ width: `${value}%` }}></div>
+                      <div className={`h-full ${skill.color} rounded-full transition-all duration-1000 ease-out shadow-sm`} style={{ width: `${value}%` }}></div>
                     </div>
                   )}
                 </div>
