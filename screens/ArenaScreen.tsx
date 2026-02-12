@@ -14,7 +14,8 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
   const confirmedCount = players.filter(p => p.confirmed).length;
   const isConfirmed = currentPlayer?.confirmed || false;
   
-  const isAdmin = currentPlayer?.role === 'admin' || !activeMatch;
+  // Apenas o e-mail cadastrado terá isAdmin como true
+  const isAdmin = currentPlayer?.role === 'admin';
   
   const GAME_FEE = activeMatch?.price || 0;
   const userBalance = currentPlayer?.paid ? 0 : (isConfirmed ? GAME_FEE : 0);
@@ -43,6 +44,8 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
                 <span className="material-symbols-outlined text-[24px]">share</span>
               </button>
           )}
+          
+          {/* Apenas ADM cria partidas */}
           {isAdmin && (
             <button 
               onClick={() => onNavigate('create-match')}
@@ -52,15 +55,20 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
               <span className="material-symbols-outlined text-[24px]">add</span>
             </button>
           )}
-          <button 
-            onClick={() => onNavigate('finance')}
-            className="size-11 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-secondary shadow-sm active:scale-90 transition-all relative"
-          >
-            <span className="material-symbols-outlined text-[24px]">payments</span>
-            {players.some(p => !p.paid && p.confirmed) && (
-              <span className="absolute top-0 right-0 size-2.5 bg-primary rounded-full border-2 border-white animate-pulse"></span>
-            )}
-          </button>
+
+          {/* Apenas ADM acessa o Cofre (Financeiro) */}
+          {isAdmin && (
+            <button 
+              onClick={() => onNavigate('finance')}
+              className="size-11 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-secondary shadow-sm active:scale-90 transition-all relative"
+              title="Financeiro"
+            >
+              <span className="material-symbols-outlined text-[24px]">payments</span>
+              {players.some(p => !p.paid && p.confirmed) && (
+                <span className="absolute top-0 right-0 size-2.5 bg-primary rounded-full border-2 border-white animate-pulse"></span>
+              )}
+            </button>
+          )}
         </div>
       </header>
 

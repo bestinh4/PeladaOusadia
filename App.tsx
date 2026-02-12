@@ -123,8 +123,18 @@ const App: React.FC = () => {
   }, [user, loading]);
 
   const navigateTo = useCallback((screen: Screen, data?: any) => {
+    const currentPlayer = players.find(p => p.id === user?.uid);
+    const isAdmin = currentPlayer?.role === 'admin';
+
+    // Rota Protegida: Apenas ADM acessa Financeiro e Criação de Partida
+    if ((screen === 'finance' || screen === 'create-match') && !isAdmin) {
+      alert("Acesso restrito ao Administrador.");
+      dispatch({ type: 'NAVIGATE', screen: 'home' });
+      return;
+    }
+
     dispatch({ type: 'NAVIGATE', screen, data });
-  }, []);
+  }, [user, players]);
 
   const toggleConfirm = useCallback(async (id: string) => {
     const player = players.find(p => p.id === id);
@@ -190,7 +200,7 @@ const App: React.FC = () => {
         {currentScreen === 'players' && <PlayerListScreen players={players} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} />}
         {currentScreen === 'scout' && <ScoutScreen players={players} onNavigate={navigateTo} />}
         {currentScreen === 'draw' && <DrawScreen players={players} onNavigate={navigateTo} />}
-        {currentScreen === 'finance' && <FinanceScreen players={players} onNavigate={navigateTo} />}
+        {currentScreen === 'finance' && <FinanceScreen players={players} currentPlayer={currentPlayer || null} onNavigate={navigateTo} />}
         {currentScreen === 'create-match' && <CreateMatchScreen onNavigate={navigateTo} />}
         {currentScreen === 'profile' && selectedPlayer && (
           <ProfileScreen 

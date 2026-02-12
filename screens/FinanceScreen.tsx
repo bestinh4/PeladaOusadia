@@ -5,12 +5,26 @@ import { playerService } from '../services/playerService';
 
 interface FinanceScreenProps {
   players: Player[];
+  currentPlayer: Player | null;
   onNavigate: (screen: Screen) => void;
 }
 
-const FinanceScreen: React.FC<FinanceScreenProps> = ({ players, onNavigate }) => {
+const FinanceScreen: React.FC<FinanceScreenProps> = ({ players, currentPlayer, onNavigate }) => {
   const [filter, setFilter] = useState('Todos');
   const [search, setSearch] = useState('');
+
+  const isAdmin = currentPlayer?.role === 'admin';
+
+  if (!isAdmin) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center p-8 bg-background text-center">
+        <span className="material-symbols-outlined text-primary text-6xl mb-4">lock</span>
+        <h2 className="text-2xl font-black text-secondary uppercase italic">Acesso Negado</h2>
+        <p className="text-xs text-secondary/60 mb-8 font-medium">Esta seção é exclusiva para o administrador financeiro do grupo.</p>
+        <button onClick={() => onNavigate('home')} className="w-full h-12 bg-primary text-white rounded-xl font-bold transition-all active:scale-95">Voltar para Home</button>
+      </div>
+    );
+  }
 
   const GAME_FEE = 30;
   const confirmedPlayers = players.filter(p => p.confirmed);
@@ -49,7 +63,6 @@ const FinanceScreen: React.FC<FinanceScreenProps> = ({ players, onNavigate }) =>
       </header>
 
       <div className="flex-1 overflow-y-auto no-scrollbar pb-32 px-6 pt-6">
-        {/* Neo-Bank Balance Card */}
         <div className="mb-10 animate-slide-up">
           <div className="bg-white border border-slate-100 rounded-[3rem] p-8 relative overflow-hidden pro-shadow">
             <div className="absolute top-0 right-0 size-40 bg-slate-50 rounded-bl-full opacity-50 -z-0"></div>
@@ -82,7 +95,6 @@ const FinanceScreen: React.FC<FinanceScreenProps> = ({ players, onNavigate }) =>
           </div>
         </div>
 
-        {/* Smart Search & Filter */}
         <div className="mb-8 animate-slide-up delay-100">
           <div className="relative mb-6">
             <input 
@@ -110,7 +122,6 @@ const FinanceScreen: React.FC<FinanceScreenProps> = ({ players, onNavigate }) =>
           </div>
         </div>
 
-        {/* Professional Transaction List */}
         <div className="space-y-4 animate-slide-up delay-200">
           {filteredPlayers.length === 0 ? (
             <div className="py-24 text-center text-slate-300 font-black uppercase text-[11px] tracking-widest italic">Sem registros financeiros</div>
