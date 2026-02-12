@@ -77,7 +77,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 const ScreenLoader = () => (
   <div className="h-full w-full flex flex-col items-center justify-center bg-background gap-4">
     <div className="size-12 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
-    <span className="text-[10px] font-black text-secondary/40 uppercase tracking-[0.4em] animate-pulse">Sincronizando Elenco...</span>
+    <span className="text-[10px] font-black text-secondary/40 uppercase tracking-[0.4em] animate-pulse">Sincronizando...</span>
   </div>
 );
 
@@ -179,7 +179,7 @@ const App: React.FC = () => {
           <span className="material-symbols-outlined text-red-500 text-6xl mb-6">error</span>
           <h2 className="text-2xl font-black text-secondary uppercase italic">Erro de Sincronização</h2>
           <p className="text-sm text-secondary/60 mb-8 max-w-md mx-auto">{error}</p>
-          <button onClick={() => window.location.reload()} className="px-12 h-14 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95">Tentar Novamente</button>
+          <button onClick={() => window.location.reload()} className="px-12 h-14 bg-primary text-white rounded-2xl font-black transition-all active:scale-95">Recarregar</button>
         </div>
       );
     }
@@ -234,7 +234,7 @@ const App: React.FC = () => {
       </main>
       
       {user && currentScreen !== 'login' && currentScreen !== 'registration' && (
-        <footer className="shrink-0 z-50 w-full bg-white border-t border-slate-100">
+        <footer className="shrink-0 z-50 w-full bg-white border-t border-slate-100 pb-safe">
           <div className="max-w-[1200px] mx-auto">
             <BottomNav activeScreen={currentScreen} onNavigate={navigateTo} />
           </div>
