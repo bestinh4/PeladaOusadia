@@ -4,23 +4,25 @@ import {
   onSnapshot, 
   doc, 
   query, 
-  orderBy, 
   limit, 
   addDoc, 
   serverTimestamp, 
   writeBatch, 
   getDocs,
-  where
+  where,
+  setDoc,
+  getDoc
 } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "../lib/firebase";
 import { Match } from "../types";
 
 const MATCHES_COL = "matches";
 const PLAYERS_COL = "players";
+const CONFIG_COL = "app_config";
 
 export const matchService = {
   subscribeToActiveMatch: (callback: (match: Match | null) => void) => {
-    // Consulta simplificada para evitar erros de índice composto em projetos novos
     const q = query(
       collection(db, MATCHES_COL), 
       where("active", "==", true),
@@ -35,6 +37,24 @@ export const matchService = {
         callback({ id: doc.id, ...doc.data() } as Match);
       }
     });
+  },
+
+  subscribeToFeaturedImage: (callback: (url: string | null) => void) => {
+    return onSnapshot(doc(db, CONFIG_COL, "featured_team"), (doc) => {
+      if (doc.exists()) {
+        callback(doc.data().url);
+      } else {
+        callback(null);
+      }
+    });
+  },
+
+  updateFeaturedImage: async (file: File) => {
+    const storageRef = ref(storage, `featured/team_of_the_week_${Date.now()}`);
+    const snapshot = await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(snapshot.ref);
+    await setDoc(doc(db, CONFIG_COL, "featured_team"), { url, updatedAt: serverTimestamp() });
+    return url;
   },
 
   createMatch: async (matchData: Omit<Match, 'id' | 'active' | 'createdAt'>) => {

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useCallback, Suspense, lazy, useReducer } from 'react';
+import React, { useEffect, useCallback, Suspense, lazy, useReducer, useState } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './lib/firebase';
 import { Screen, Player, Match } from './types';
@@ -81,6 +81,7 @@ const ScreenLoader = () => (
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const [featuredImageUrl, setFeaturedImageUrl] = useState<string | null>(null);
   const { user, currentScreen, players, activeMatch, selectedPlayerId, loading, error } = state;
 
   useEffect(() => {
@@ -99,6 +100,8 @@ const App: React.FC = () => {
     if (loading || !user || currentScreen === 'registration') return;
     let unsubscribePlayers: (() => void) | undefined;
     let unsubscribeMatch: (() => void) | undefined;
+    let unsubscribeFeatured: (() => void) | undefined;
+
     const initData = async () => {
       try {
         unsubscribePlayers = playerService.subscribeToPlayers(
@@ -106,12 +109,17 @@ const App: React.FC = () => {
           (err) => dispatch({ type: 'SET_ERROR', error: err.message })
         );
         unsubscribeMatch = matchService.subscribeToActiveMatch((match) => dispatch({ type: 'SET_MATCH', match }));
+        unsubscribeFeatured = matchService.subscribeToFeaturedImage((url) => setFeaturedImageUrl(url));
       } catch (err: any) {
         dispatch({ type: 'SET_ERROR', error: err.message });
       }
     };
     initData();
-    return () => { unsubscribePlayers?.(); unsubscribeMatch?.(); };
+    return () => { 
+      unsubscribePlayers?.(); 
+      unsubscribeMatch?.(); 
+      unsubscribeFeatured?.();
+    };
   }, [user, loading, currentScreen]);
 
   const navigateTo = useCallback((screen: Screen, data?: any) => {
@@ -163,7 +171,16 @@ const App: React.FC = () => {
       <Suspense fallback={<ScreenLoader />}>
         {currentScreen === 'login' && <LoginScreen onLogin={() => {}} />}
         {currentScreen === 'registration' && user && <RegistrationScreen user={user} onComplete={() => navigateTo('home')} />}
-        {currentScreen === 'home' && <ArenaScreen players={players} activeMatch={activeMatch} currentPlayer={currentPlayer || null} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} />}
+        {currentScreen === 'home' && (
+          <ArenaScreen 
+            players={players} 
+            activeMatch={activeMatch} 
+            currentPlayer={currentPlayer || null} 
+            featuredImageUrl={featuredImageUrl}
+            onToggleConfirm={toggleConfirm} 
+            onNavigate={navigateTo} 
+          />
+        )}
         {currentScreen === 'players' && <PlayerListScreen players={players} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} currentPlayer={currentPlayer} />}
         {currentScreen === 'scout' && <ScoutScreen players={players} onNavigate={navigateTo} />}
         {currentScreen === 'draw' && <DrawScreen players={players} onNavigate={navigateTo} />}
