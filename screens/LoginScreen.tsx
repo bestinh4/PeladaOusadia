@@ -23,7 +23,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onDemoMode }) => {
       
       let errorData = {
         code: err.code || 'unknown',
-        message: err.message || "Failed to sign in. Please try again."
+        message: err.message || "Falha ao entrar. Tente novamente."
       };
 
       if (err.code === 'auth/unauthorized-domain') {
@@ -43,13 +43,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onDemoMode }) => {
   const copyDomain = () => {
     if (error?.domain) {
       navigator.clipboard.writeText(error.domain);
-      alert("Domínio copiado!");
+      alert("Domínio copiado para a área de transferência!");
     }
   };
 
   return (
     <div className="h-full flex flex-col items-center justify-center bg-surface-gray px-8 relative overflow-hidden">
-      {/* Dynamic Background Pattern */}
+      {/* Background Pattern */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
         backgroundImage: 'radial-gradient(circle, #ed1d23 1px, transparent 1px)',
         backgroundSize: '24px 24px'
@@ -57,7 +57,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onDemoMode }) => {
 
       <div className="w-full max-w-sm bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] p-10 flex flex-col items-center gap-10 relative z-10 animate-fade-in-up border border-white/40">
         
-        {/* Animated Logo Container */}
+        {/* Animated Logo */}
         <div className="w-32 h-32 bg-navy rounded-[2.2rem] flex items-center justify-center shadow-2xl animate-float relative overflow-hidden group">
            <div className="absolute inset-0 premium-shimmer opacity-0 group-hover:opacity-100 transition-opacity"></div>
            <div className="w-16 h-16 text-primary flex items-center justify-center border-2 border-primary/30 rounded-2xl p-2 relative z-10">
@@ -75,14 +75,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onDemoMode }) => {
         </div>
 
         <div className="w-full space-y-4">
+          {/* Error Feedback Section */}
           {error && error.code === 'auth/unauthorized-domain' ? (
             <div className="p-5 bg-navy/5 border border-navy/10 rounded-3xl space-y-3 animate-fade-in-up">
               <div className="flex items-center gap-2 text-primary">
                 <span className="material-symbols-outlined text-[20px]">warning</span>
-                <span className="text-[10px] font-black uppercase tracking-widest">Configuração Necessária</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">Ação Necessária</span>
               </div>
               <p className="text-[11px] text-gray-600 leading-relaxed font-medium">
-                Adicione este domínio no Firebase Console:
+                Adicione este domínio às "Origens Autorizadas" no Firebase Console:
               </p>
               <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-gray-100">
                 <code className="text-[10px] font-bold text-navy truncate mr-2">{error.domain}</code>
@@ -91,7 +92,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onDemoMode }) => {
                 </button>
               </div>
               <p className="text-[9px] text-gray-400 italic">
-                Authentication > Settings > Authorized Domains
+                {"Authentication > Settings > Authorized Domains"}
               </p>
             </div>
           ) : error && (
@@ -100,6 +101,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onDemoMode }) => {
             </div>
           )}
 
+          {/* Login Button */}
           <button 
             onClick={handleGoogleLogin}
             disabled={isAuthenticating}
@@ -117,7 +119,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onDemoMode }) => {
                   </svg>
                </div>
              )}
-             <span className="font-bold text-white tracking-wide">{isAuthenticating ? 'Autenticando...' : 'Entrar com Google'}</span>
+             <span className="font-bold text-white tracking-wide">
+               {isAuthenticating ? 'Autenticando...' : 'Entrar com Google'}
+             </span>
           </button>
           
           <div className="flex items-center gap-4 py-2">
@@ -126,6 +130,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onDemoMode }) => {
             <div className="flex-1 h-px bg-gray-100"></div>
           </div>
 
+          {/* Demo Button */}
           <button 
             onClick={onDemoMode}
             className="w-full h-15 bg-white border-2 border-primary/20 text-primary rounded-2xl flex items-center justify-center gap-2 font-black italic tracking-widest shadow-sm hover:shadow-md transition-all active:scale-95 group overflow-hidden relative"
@@ -136,6 +141,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onDemoMode }) => {
           </button>
         </div>
 
+        {/* Footer info */}
         <div className="text-[9px] text-gray-400/60 text-center leading-relaxed font-medium">
            v2.5.0 Premium Edition <br/>
            <div className="mt-1 flex items-center justify-center gap-3">
