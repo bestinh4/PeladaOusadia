@@ -15,8 +15,8 @@ interface ProfileScreenProps {
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, onNavigate, onUpdateAvatar, onLogout }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
+  const [isUploading, setIsUploading] = useState(false); // Carregamento do envio do arquivo
+  const [isImageSyncing, setIsImageSyncing] = useState(false); // Carregamento da renderização da imagem
   const [editData, setEditData] = useState({
     name: player.name,
     position: player.position,
@@ -25,9 +25,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
     stats: { ...player.stats }
   });
 
-  // Importante: Resetar o estado de imagem carregada quando a URL da foto muda
+  // Sincroniza dados locais com props do jogador
   useEffect(() => {
-    setImageLoaded(false);
     setEditData({
       name: player.name,
       position: player.position,
@@ -35,37 +34,47 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
       number: player.number || 0,
       stats: { ...player.stats }
     });
-  }, [player.id, player.avatar]); // Monitorar ID e URL da foto
+  }, [player.id]);
+
+  // Monitora mudança na URL da foto para iniciar o estado de "Sincronização"
+  useEffect(() => {
+    if (player.avatar) {
+      setIsImageSyncing(true);
+      // Timeout de segurança: Se a imagem não carregar em 8s, libera o UI
+      const timer = setTimeout(() => setIsImageSyncing(false), 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [player.avatar]);
 
   const isOwnProfile = currentPlayer?.id === player.id;
   const isAdmin = currentPlayer?.role === 'admin';
 
   const handleAvatarClick = () => {
-    if (!isOwnProfile || loading) return;
+    if (!isOwnProfile || isUploading) return;
     fileInputRef.current?.click();
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setLoading(true);
-      setImageLoaded(false);
+      setIsUploading(true);
       try {
         await onUpdateAvatar(player.id, file);
-        // O loading continua true até que o useEffect acima (player.avatar) 
-        // seja acionado e a NOVA imagem carregue no navegador.
+        // Após o await, o Firestore atualiza, o player.avatar muda via prop, 
+        // e o useEffect de "isImageSyncing" entra em ação.
       } catch (err) {
         console.error("Erro no upload:", err);
         alert("Erro ao enviar imagem. Verifique sua conexão.");
-        setLoading(false);
+        setIsUploading(false);
       } finally {
         if (fileInputRef.current) fileInputRef.current.value = '';
+        // Note: isUploading será setado como false no onLoad da imagem ou no timeout
       }
     }
   };
 
   const handleSaveProfile = async () => {
-    setLoading(true);
+    setIsUploading(true);
     try {
       const s = editData.stats;
       const overall = Math.round((s.pac + s.sho + s.pas + s.dri + s.def + s.phy) / 6);
@@ -74,12 +83,22 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
     } catch (err: any) {
       alert("Erro ao salvar perfil: " + err.message);
     } finally {
-      setLoading(false);
+      setIsUploading(false);
     }
   };
 
-  // Se o upload terminou mas a imagem ainda não "bateu" no onLoad do navegador, mantemos o spinner
-  const showSpinner = loading || (player.avatar && !imageLoaded && isOwnProfile);
+  const handleImageLoad = () => {
+    setIsImageSyncing(false);
+    setIsUploading(false);
+  };
+
+  const handleImageError = () => {
+    setIsImageSyncing(false);
+    setIsUploading(false);
+  };
+
+  // Spinner aparece se estiver fazendo upload OU se a nova imagem ainda não carregou no navegador
+  const showSpinner = isUploading || isImageSyncing;
 
   const displayRating = (player.rating / 20).toFixed(1);
 
@@ -116,12 +135,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
           {(isOwnProfile || isAdmin) ? (
             <button 
               onClick={() => isEditing ? handleSaveProfile() : setIsEditing(true)}
-              disabled={loading}
+              disabled={isUploading}
               className={`size-10 rounded-xl flex items-center justify-center transition-all active:scale-90 shadow-lg ${
                 isEditing ? 'bg-primary text-white shadow-primary/20' : 'bg-white border border-slate-100 text-secondary'
               }`}
             >
-              {loading ? (
+              {isUploading ? (
                 <div className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
               ) : (
                 <span className="material-symbols-outlined text-[20px]">{isEditing ? 'done' : 'settings'}</span>
@@ -137,33 +156,31 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
           
           <div className="flex flex-col items-center relative z-10">
             <div 
-              className={`relative mb-8 group ${isOwnProfile && !loading ? 'cursor-pointer active:scale-95' : ''} transition-all`} 
+              className={`relative mb-8 group ${isOwnProfile && !isUploading ? 'cursor-pointer active:scale-95' : ''} transition-all`} 
               onClick={handleAvatarClick}
             >
               <div className="size-40 rounded-full border-8 border-white shadow-xl relative transition-transform bg-slate-100 overflow-hidden">
+                 {/* key={player.avatar} força o React a tratar como uma nova imagem, disparando onLoad */}
                  <img 
+                   key={player.avatar}
                    src={player.avatar} 
-                   className={`size-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`} 
+                   className={`size-full object-cover transition-opacity duration-500 ${!isImageSyncing ? 'opacity-100' : 'opacity-0'}`} 
                    alt={player.name}
-                   onLoad={() => {
-                     setImageLoaded(true);
-                     setLoading(false); // Garante que o loading pare quando a imagem aparecer
-                   }}
-                   onError={() => {
-                     setImageLoaded(true);
-                     setLoading(false);
-                   }}
+                   onLoad={handleImageLoad}
+                   onError={handleImageError}
                  />
                  
-                 {/* Overlay de carregamento robusto */}
+                 {/* Overlay de carregamento */}
                  {showSpinner && (
                     <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white backdrop-blur-sm z-20">
                       <div className="size-8 border-4 border-white/30 border-t-white rounded-full animate-spin mb-2"></div>
-                      <span className="text-[8px] font-black uppercase tracking-widest">Sincronizando...</span>
+                      <span className="text-[8px] font-black uppercase tracking-widest animate-pulse">
+                        {isUploading ? 'Enviando...' : 'Sincronizando...'}
+                      </span>
                     </div>
                  )}
 
-                 {isOwnProfile && !loading && (
+                 {isOwnProfile && !showSpinner && (
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white backdrop-blur-[2px]">
                       <span className="material-symbols-outlined text-2xl">photo_camera</span>
                     </div>
