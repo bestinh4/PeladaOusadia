@@ -9,29 +9,33 @@ interface CreateMatchScreenProps {
 
 const CreateMatchScreen: React.FC<CreateMatchScreenProps> = ({ onNavigate }) => {
   const [loading, setLoading] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [formData, setFormData] = useState({
     location: 'Arena Central',
     date: '',
     time: '',
     type: 'Society',
     price: 30,
-    limit: 18
+    limit: 14 // Atualizado para o padrão 7x7 (2 times)
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleOpenConfirm = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.date || !formData.time) {
       alert("Preencha data e hora!");
       return;
     }
+    setShowConfirm(true);
+  };
 
+  const handleConfirmCreate = async () => {
     setLoading(true);
+    setShowConfirm(false);
     try {
       await matchService.createMatch(formData);
       onNavigate('home');
     } catch (err: any) {
       alert("Erro ao criar partida: " + err.message);
-    } finally {
       setLoading(false);
     }
   };
@@ -47,7 +51,7 @@ const CreateMatchScreen: React.FC<CreateMatchScreenProps> = ({ onNavigate }) => 
         <div className="size-9 sm:size-10"></div>
       </header>
 
-      <form onSubmit={handleSubmit} className="px-4 sm:px-6 mt-6 sm:mt-8 space-y-6 sm:space-y-8 animate-slide-up">
+      <form onSubmit={handleOpenConfirm} className="px-4 sm:px-6 mt-6 sm:mt-8 space-y-6 sm:space-y-8 animate-slide-up">
         {/* Type Selector Balanced */}
         <div className="flex p-1.5 bg-slate-100 rounded-2xl shadow-inner">
           {['Society', 'Futsal', 'Campo'].map(type => (
@@ -109,14 +113,14 @@ const CreateMatchScreen: React.FC<CreateMatchScreenProps> = ({ onNavigate }) => 
 
            <div className="grid grid-cols-2 gap-4">
              <div className="space-y-2">
-                <label className="text-[9px] sm:text-[10px] font-black text-slate-400 ml-2 uppercase tracking-[0.2em]">Atletas</label>
+                <label className="text-[9px] sm:text-[10px] font-black text-slate-400 ml-2 uppercase tracking-[0.2em]">Limite de Atletas</label>
                 <div className="flex items-center bg-white rounded-2xl px-5 h-12 sm:h-14 shadow-sm border border-slate-100 focus-within:border-primary/40 transition-all">
                   <input 
                     type="number"
                     value={formData.limit}
                     onChange={(e) => setFormData({...formData, limit: parseInt(e.target.value) || 0})}
                     className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-bold text-secondary" 
-                    placeholder="18" 
+                    placeholder="14" 
                   />
                   <span className="material-symbols-outlined text-slate-300 text-[20px] sm:text-[22px]">groups</span>
                 </div>
@@ -159,6 +163,54 @@ const CreateMatchScreen: React.FC<CreateMatchScreenProps> = ({ onNavigate }) => 
            </p>
         </div>
       </form>
+
+      {/* Confirmation Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-6">
+          <div className="absolute inset-0 bg-secondary/80 backdrop-blur-sm animate-fade-in" onClick={() => setShowConfirm(false)}></div>
+          <div className="bg-white w-full max-w-[360px] rounded-[2.5rem] p-8 relative z-10 shadow-2xl animate-scale-in border border-slate-100">
+            <div className="size-16 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <span className="material-symbols-outlined text-[32px] font-black">sports_soccer</span>
+            </div>
+            
+            <h2 className="text-xl font-black text-secondary uppercase italic text-center mb-6 leading-tight">Confirmar Lançamento?</h2>
+            
+            <div className="space-y-4 mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                <span className="text-slate-400">Local</span>
+                <span className="text-secondary">{formData.location}</span>
+              </div>
+              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                <span className="text-slate-400">Data e Hora</span>
+                <span className="text-secondary">{formData.date} às {formData.time}</span>
+              </div>
+              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                <span className="text-slate-400">Capacidade</span>
+                <span className="text-secondary">{formData.limit} Atletas</span>
+              </div>
+              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                <span className="text-slate-400">Valor</span>
+                <span className="text-success font-black">R$ {formData.price},00</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <button 
+                onClick={() => setShowConfirm(false)}
+                className="h-12 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 border border-slate-200 hover:bg-slate-50 active:scale-95 transition-all"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleConfirmCreate}
+                className="h-12 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all"
+              >
+                Lançar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
