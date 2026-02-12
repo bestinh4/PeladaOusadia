@@ -13,43 +13,45 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, onNavigate }) => 
   return (
     <div className="h-full bg-background overflow-y-auto no-scrollbar pb-40">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-6 sticky top-0 bg-background/80 backdrop-blur-xl z-30">
-        <button onClick={() => onNavigate('home')} className="text-white">
+      <header className="flex items-center justify-between px-6 py-6 sticky top-0 bg-white/90 backdrop-blur-md z-30 border-b border-slate-100">
+        <button onClick={() => onNavigate('home')} className="size-10 bg-slate-50 text-secondary rounded-xl flex items-center justify-center active:scale-90 transition-all">
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
-        <h2 className="text-lg font-black text-white">Perfil</h2>
-        <button className="text-white">
+        <h2 className="text-lg font-black text-secondary italic">Atleta Elite</h2>
+        <button className="size-10 bg-slate-50 text-secondary rounded-xl flex items-center justify-center active:scale-90 transition-all">
           <span className="material-symbols-outlined">settings</span>
         </button>
       </header>
 
       {/* Profile Info */}
-      <div className="flex flex-col items-center pt-4 mb-8">
+      <div className="flex flex-col items-center pt-8 mb-8 bg-white pb-8 rounded-b-[4rem] shadow-sm border-b border-slate-100">
         <div className="relative mb-6">
-          <div className="size-32 rounded-full border-4 border-primary/20 p-1.5 neon-glow">
-            <img src={player.avatar} className="size-full rounded-full object-cover" />
+          <div className="size-36 rounded-full border-4 border-slate-100 p-1.5 shadow-xl relative">
+             {/* Checkerboard border ring */}
+             <div className="absolute inset-0 rounded-full opacity-10 checkerboard-pattern -m-1"></div>
+             <img src={player.avatar} className="size-full rounded-full object-cover relative z-10 border-4 border-white" />
           </div>
-          <div className="absolute bottom-1 right-1 size-8 bg-surface rounded-full border-4 border-background flex items-center justify-center">
-            <span className="material-symbols-outlined text-primary text-[16px] font-bold">verified</span>
+          <div className="absolute bottom-1 right-1 size-10 bg-secondary rounded-full border-4 border-white flex items-center justify-center shadow-lg">
+            <span className="material-symbols-outlined text-white text-[18px] font-bold">verified</span>
           </div>
         </div>
-        <h1 className="text-3xl font-black text-white uppercase italic tracking-tighter mb-1">{player.name}</h1>
+        <h1 className="text-3xl font-black text-secondary uppercase italic tracking-tighter mb-1">{player.name}</h1>
         <div className="flex items-center gap-3">
-          <span className="bg-primary/20 text-primary px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">Meia-Atacante</span>
-          <span className="text-white/40 text-[9px] font-black uppercase tracking-widest">Membro desde 2019</span>
+          <span className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-primary/20">{player.position}</span>
+          <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Nível: Pro</span>
         </div>
       </div>
 
       {/* Stats Badges */}
-      <div className="px-6 grid grid-cols-3 gap-3 mb-10">
+      <div className="px-6 grid grid-cols-3 gap-4 mb-10 -mt-12 relative z-20">
         {[
-          { val: '24', label: 'Gols' },
-          { val: '12', label: 'Assist.' },
-          { val: '45', label: 'Jogos' }
+          { val: player.goals || '24', label: 'Gols', color: 'bg-primary shadow-primary/20' },
+          { val: '12', label: 'Assists', color: 'bg-secondary shadow-secondary/20' },
+          { val: '45', label: 'Partidas', color: 'bg-white border border-slate-100' }
         ].map(s => (
-          <div key={s.label} className="bg-surface border border-white/5 rounded-[2rem] p-6 flex flex-col items-center justify-center">
-            <span className="text-3xl font-black text-white mb-1">{s.val}</span>
-            <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">{s.label}</span>
+          <div key={s.label} className={`rounded-[2.5rem] p-6 flex flex-col items-center justify-center shadow-lg ${s.color}`}>
+            <span className={`text-3xl font-black mb-1 ${s.color.includes('white') ? 'text-secondary' : 'text-white'}`}>{s.val}</span>
+            <span className={`text-[9px] font-black uppercase tracking-widest ${s.color.includes('white') ? 'text-slate-400' : 'text-white/60'}`}>{s.label}</span>
           </div>
         ))}
       </div>
@@ -57,57 +59,31 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, onNavigate }) => 
       {/* Skills Section */}
       <div className="px-6 mb-10 space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-black text-white">Habilidades</h3>
-          <div className="flex items-center gap-1 bg-primary/10 px-3 py-1 rounded-full">
-            <span className="text-[10px] font-black text-primary">4.5</span>
-            <span className="material-symbols-outlined text-primary text-[14px]">star</span>
+          <h3 className="text-xl font-black text-secondary italic">Atributos Técnicos</h3>
+          <div className="flex items-center gap-1 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+            <span className="text-[10px] font-black text-amber-600">4.9</span>
+            <span className="material-symbols-outlined text-amber-500 text-[14px]">star</span>
           </div>
         </div>
 
-        <div className="bg-surface border border-white/5 rounded-3xl p-8 space-y-8">
+        <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 space-y-8 shadow-sm">
           {[
-            { label: 'Velocidade', val: 85, icon: 'bolt' },
-            { label: 'Chute', val: 70, icon: 'sports_soccer' },
-            { label: 'Passe', val: 90, icon: 'swap_calls' }
+            { label: 'Velocidade', val: player.stats.pac, icon: 'bolt', color: 'bg-primary' },
+            { label: 'Chute', val: player.stats.sho, icon: 'sports_soccer', color: 'bg-secondary' },
+            { label: 'Passe', val: player.stats.pas, icon: 'swap_calls', color: 'bg-success' }
           ].map(skill => (
             <div key={skill.label} className="space-y-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-primary text-[20px]">{skill.icon}</span>
-                  <span className="text-sm font-black text-white">{skill.label}</span>
+                  <div className={`size-8 rounded-lg ${skill.color} flex items-center justify-center text-white shadow-lg`}>
+                    <span className="material-symbols-outlined text-[18px]">{skill.icon}</span>
+                  </div>
+                  <span className="text-sm font-black text-secondary uppercase">{skill.label}</span>
                 </div>
-                <span className="text-sm font-black text-white">{skill.val}</span>
+                <span className="text-sm font-black text-secondary italic">{skill.val}</span>
               </div>
-              <div className="w-full h-2 bg-background rounded-full overflow-hidden">
-                <div className="h-full bg-primary neon-glow rounded-full" style={{ width: `${skill.val}%` }}></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Recent Matches */}
-      <div className="px-6 space-y-6">
-        <h3 className="text-xl font-black text-white">Partidas Recentes</h3>
-        <div className="space-y-3">
-          {[
-            { opponent: 'Time Azul', result: 'Vitória', score: '5 - 3', date: '12 Out, 2023', color: 'text-primary' },
-            { opponent: 'Time Branco', result: 'Derrota', score: '2 - 4', date: '05 Out, 2023', color: 'text-accent' },
-            { opponent: 'Time Verde', result: 'Empate', score: '3 - 3', date: '28 Set, 2023', color: 'text-amber-400' }
-          ].map((m, i) => (
-            <div key={i} className="bg-surface border border-white/5 rounded-3xl p-6 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="size-12 bg-background rounded-2xl flex items-center justify-center text-white/20">
-                   <span className="material-symbols-outlined">{m.result === 'Vitória' ? 'workspace_premium' : m.result === 'Derrota' ? 'cancel' : 'remove'}</span>
-                </div>
-                <div>
-                  <p className="text-sm font-black text-white">vs. {m.opponent}</p>
-                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{m.date}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className={`text-[11px] font-black uppercase tracking-widest ${m.color}`}>{m.result}</p>
-                <p className="text-lg font-black text-white">{m.score}</p>
+              <div className="w-full h-2.5 bg-slate-50 rounded-full overflow-hidden p-0.5 border border-slate-100">
+                <div className={`h-full ${skill.color} rounded-full transition-all duration-1000`} style={{ width: `${skill.val}%` }}></div>
               </div>
             </div>
           ))}
@@ -116,9 +92,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, onNavigate }) => 
 
       {/* Footer Action */}
       <div className="fixed bottom-32 left-0 w-full px-6 z-40">
-        <button className="w-full h-15 btn-primary rounded-2xl flex items-center justify-center gap-2">
+        <button className="w-full h-15 btn-primary rounded-2xl flex items-center justify-center gap-2 shadow-xl">
           <span className="material-symbols-outlined">edit</span>
-          Editar Perfil
+          Editar Cadastro de Atleta
         </button>
       </div>
     </div>

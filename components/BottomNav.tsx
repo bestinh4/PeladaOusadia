@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { Screen } from '../types';
 
 interface BottomNavProps {
@@ -8,7 +8,6 @@ interface BottomNavProps {
 }
 
 const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onNavigate }) => {
-  // Mapping screens to navigation items as per user request
   const navItems = [
     { id: 'home', icon: 'home', label: 'Início' },
     { id: 'players', icon: 'groups', label: 'Elenco' },
@@ -17,7 +16,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onNavigate }) => {
   ];
 
   return (
-    <nav className="absolute bottom-0 w-full bg-[#16211c] border-t border-white/5 pb-8 pt-3 px-6 z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+    <nav className="absolute bottom-0 w-full bg-white border-t border-slate-100 pb-8 pt-3 px-6 z-50 shadow-[0_-8px_30px_rgba(0,0,0,0.05)]">
       <ul className="flex justify-between items-end relative h-14">
         {/* Left Side Items */}
         {navItems.slice(0, 2).map((item) => {
@@ -27,7 +26,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onNavigate }) => {
               <button
                 onClick={() => onNavigate(item.id as Screen)}
                 className={`w-full flex flex-col items-center gap-1 transition-all duration-300 ${
-                  isActive ? 'text-[#00ff84] scale-110' : 'text-gray-500'
+                  isActive ? 'text-primary scale-110' : 'text-slate-400 hover:text-secondary'
                 }`}
               >
                 <span className={`material-symbols-outlined text-[26px] ${isActive ? 'font-bold' : ''}`} style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
@@ -37,7 +36,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onNavigate }) => {
                   {item.label}
                 </span>
                 {isActive && (
-                  <div className="absolute -bottom-2 w-1 h-1 bg-[#00ff84] rounded-full shadow-[0_0_8px_#00ff84]"></div>
+                  <div className="absolute -bottom-2 w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_8px_#ff0000]"></div>
                 )}
               </button>
             </li>
@@ -48,7 +47,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onNavigate }) => {
         <li className="relative flex-1 flex justify-center">
           <button 
             onClick={() => onNavigate('draw')}
-            className="absolute -top-10 size-15 bg-[#00ff84] text-[#0d1310] rounded-2xl flex items-center justify-center shadow-[0_0_25px_rgba(0,255,132,0.4)] border-[6px] border-[#0d1310] active:scale-90 transition-all hover:rotate-90"
+            className="absolute -top-12 size-16 bg-primary text-white rounded-2xl flex items-center justify-center shadow-[0_8px_25px_rgba(255,0,0,0.3)] border-[6px] border-background active:scale-90 transition-all hover:rotate-12 hover:scale-110"
           >
             <span className="material-symbols-outlined text-[32px] font-black">add</span>
           </button>
@@ -62,7 +61,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onNavigate }) => {
               <button
                 onClick={() => onNavigate(item.id as Screen)}
                 className={`w-full flex flex-col items-center gap-1 transition-all duration-300 ${
-                  isActive ? 'text-[#00ff84] scale-110' : 'text-gray-500'
+                  isActive ? 'text-primary scale-110' : 'text-slate-400 hover:text-secondary'
                 }`}
               >
                 <span className={`material-symbols-outlined text-[26px] ${isActive ? 'font-bold' : ''}`} style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
@@ -72,7 +71,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onNavigate }) => {
                   {item.label}
                 </span>
                 {isActive && (
-                  <div className="absolute -bottom-2 w-1 h-1 bg-[#00ff84] rounded-full shadow-[0_0_8px_#00ff84]"></div>
+                  <div className="absolute -bottom-2 w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_8px_#ff0000]"></div>
                 )}
               </button>
             </li>
@@ -83,4 +82,4 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onNavigate }) => {
   );
 };
 
-export default BottomNav;
+export default memo(BottomNav);

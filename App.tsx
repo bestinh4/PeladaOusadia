@@ -1,17 +1,28 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './lib/firebase';
 import { Screen, Player } from './types';
 import { playerService } from './services/playerService';
 import { MOCK_PLAYERS } from './constants';
-import LoginScreen from './screens/LoginScreen';
-import ArenaScreen from './screens/ArenaScreen';
-import PlayerListScreen from './screens/PlayerListScreen';
-import ScoutScreen from './screens/ScoutScreen';
-import CreateMatchScreen from './screens/CreateMatchScreen';
-import ProfileScreen from './screens/ProfileScreen';
 import BottomNav from './components/BottomNav';
+
+// Lazy load screens for code splitting
+const LoginScreen = lazy(() => import('./screens/LoginScreen'));
+const ArenaScreen = lazy(() => import('./screens/ArenaScreen'));
+const PlayerListScreen = lazy(() => import('./screens/PlayerListScreen'));
+const ScoutScreen = lazy(() => import('./screens/ScoutScreen'));
+const ProfileScreen = lazy(() => import('./screens/ProfileScreen'));
+const DrawScreen = lazy(() => import('./screens/DrawScreen'));
+const FinanceScreen = lazy(() => import('./screens/FinanceScreen'));
+
+// Loading Fallback Component
+const ScreenLoader = () => (
+  <div className="h-full flex flex-col items-center justify-center bg-background gap-4 animate-fade-in">
+    <div className="size-12 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
+    <span className="text-[10px] font-black text-secondary/40 uppercase tracking-widest animate-pulse">Carregando...</span>
+  </div>
+);
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -91,18 +102,22 @@ const App: React.FC = () => {
     };
   }, [user, isDemoMode, loading, selectedPlayer?.id]);
 
-  const navigateTo = (screen: Screen, data?: any) => {
+  // Memoized navigation handler
+  const navigateTo = useCallback((screen: Screen, data?: any) => {
     if (screen === 'profile' && data) {
       setSelectedPlayer(data);
     }
     setCurrentScreen(screen);
-  };
+  }, []);
 
-  const toggleConfirm = async (id: string) => {
+  // Memoized presence toggle
+  const toggleConfirm = useCallback(async (id: string) => {
     if (isDemoMode) {
-      const updated = players.map(p => p.id === id ? { ...p, confirmed: !p.confirmed } : p);
-      setPlayers(updated);
-      localStorage.setItem('oa_players', JSON.stringify(updated));
+      setPlayers(prev => {
+        const updated = prev.map(p => p.id === id ? { ...p, confirmed: !p.confirmed } : p);
+        localStorage.setItem('oa_players', JSON.stringify(updated));
+        return updated;
+      });
       return;
     }
 
@@ -114,17 +129,26 @@ const App: React.FC = () => {
         alert("Firebase Error: " + (err.code === 'permission-denied' ? "Insufficient permissions." : err.message));
       }
     }
-  };
+  }, [isDemoMode, players]);
 
-  const handleUpdateAvatar = async (id: string, file: File | string) => {
+  const handleUpdateAvatar = useCallback(async (id: string, file: File | string) => {
+    const fileToBase64 = (f: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(f);
+      });
+    };
+
     if (isDemoMode) {
       const avatarUrl = typeof file === 'string' ? file : await fileToBase64(file);
-      const updated = players.map(p => p.id === id ? { ...p, avatar: avatarUrl } : p);
-      setPlayers(updated);
-      localStorage.setItem('oa_players', JSON.stringify(updated));
-      if (selectedPlayer?.id === id) {
-        setSelectedPlayer({ ...selectedPlayer, avatar: avatarUrl });
-      }
+      setPlayers(prev => {
+        const updated = prev.map(p => p.id === id ? { ...p, avatar: avatarUrl } : p);
+        localStorage.setItem('oa_players', JSON.stringify(updated));
+        return updated;
+      });
+      setSelectedPlayer(prev => prev?.id === id ? { ...prev, avatar: avatarUrl } : prev);
       return;
     }
 
@@ -138,96 +162,81 @@ const App: React.FC = () => {
     } catch (err: any) {
       alert("Storage Error: " + err.message);
     }
-  };
+  }, [isDemoMode]);
 
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await auth.signOut();
     setIsDemoMode(false);
     setCurrentScreen('login');
-  };
+  }, []);
 
   const renderScreen = () => {
-    let screenContent;
-    
     if (error && !isDemoMode && user) {
-      screenContent = (
+      return (
         <div className="h-full flex flex-col items-center justify-center p-8 bg-background text-center animate-fade-in">
           <div className="size-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mb-6 animate-scale-in">
             <span className="material-symbols-outlined text-[32px]">gpp_bad</span>
           </div>
-          <h2 className="text-xl font-black text-white mb-2 italic uppercase tracking-tighter">Permission Required</h2>
-          <p className="text-xs text-white/40 mb-6 leading-relaxed px-4">
-            {error}
-          </p>
+          <h2 className="text-xl font-black text-secondary mb-2 italic uppercase tracking-tighter">Erro de Permissão</h2>
+          <p className="text-xs text-secondary/60 mb-6 leading-relaxed px-4">{error}</p>
           <div className="w-full space-y-3 animate-slide-up delay-100">
             <button 
               onClick={() => window.location.reload()}
-              className="w-full h-12 bg-white text-background rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all"
+              className="w-full h-12 bg-primary text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all"
             >
-              Try Again
+              Tentar Novamente
             </button>
             <button 
               onClick={() => setIsDemoMode(true)}
               className="w-full h-12 bg-transparent border-2 border-primary text-primary rounded-xl font-bold text-sm active:scale-95 transition-all"
             >
-              Use Offline Mode
+              Modo Offline
             </button>
           </div>
         </div>
       );
-    } else if (loading) {
-      screenContent = (
-        <div className="h-full flex flex-col items-center justify-center bg-background gap-4 animate-fade-in">
-          <div className="size-12 border-4 border-white/5 border-t-primary rounded-full animate-spin"></div>
-          <span className="text-[10px] font-black text-white/20 uppercase tracking-widest animate-pulse">Initializing...</span>
-        </div>
-      );
-    } else {
-      switch (currentScreen) {
-        case 'login':
-          screenContent = <LoginScreen onLogin={() => navigateTo('home')} onDemoMode={() => { setIsDemoMode(true); navigateTo('home'); }} />;
-          break;
-        case 'home':
-          screenContent = <ArenaScreen onNavigate={navigateTo} />;
-          break;
-        case 'players':
-          screenContent = <PlayerListScreen players={players} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} />;
-          break;
-        case 'scout':
-          screenContent = <ScoutScreen players={players} onNavigate={navigateTo} />;
-          break;
-        case 'profile':
-          screenContent = selectedPlayer ? (
-            <ProfileScreen player={selectedPlayer} players={players} onNavigate={navigateTo} onUpdateAvatar={handleUpdateAvatar} />
-          ) : <ArenaScreen onNavigate={navigateTo} />;
-          break;
-        default:
-          screenContent = <ArenaScreen onNavigate={navigateTo} />;
-      }
     }
 
+    if (loading) return <ScreenLoader />;
+
+    const currentPlayer = players.length > 0 ? players[0] : null;
+
     return (
-      <div key={currentScreen} className="h-full w-full">
-        {screenContent}
-      </div>
+      <Suspense fallback={<ScreenLoader />}>
+        {currentScreen === 'login' && (
+          <LoginScreen onLogin={() => navigateTo('home')} onDemoMode={() => { setIsDemoMode(true); navigateTo('home'); }} />
+        )}
+        {currentScreen === 'home' && (
+          <ArenaScreen players={players} currentPlayer={currentPlayer} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} />
+        )}
+        {currentScreen === 'players' && (
+          <PlayerListScreen players={players} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} />
+        )}
+        {currentScreen === 'scout' && (
+          <ScoutScreen players={players} onNavigate={navigateTo} />
+        )}
+        {currentScreen === 'draw' && (
+          <DrawScreen players={players} onNavigate={navigateTo} />
+        )}
+        {currentScreen === 'finance' && (
+          <FinanceScreen players={players} onNavigate={navigateTo} />
+        )}
+        {currentScreen === 'profile' && selectedPlayer && (
+          <ProfileScreen player={selectedPlayer} players={players} onNavigate={navigateTo} onUpdateAvatar={handleUpdateAvatar} />
+        )}
+        {currentScreen === 'profile' && !selectedPlayer && (
+          <ArenaScreen players={players} currentPlayer={currentPlayer} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} />
+        )}
+      </Suspense>
     );
   };
 
   return (
-    <div className="flex justify-center min-h-screen bg-[#080c0a] lg:py-8 overflow-hidden">
-      <div className="w-full max-w-[430px] h-[932px] max-h-screen bg-background shadow-2xl relative flex flex-col overflow-hidden sm:rounded-[40px] border-4 border-white/5">
+    <div className="flex justify-center min-h-screen bg-slate-100 lg:py-8 overflow-hidden">
+      <div className="w-full max-w-[430px] h-[932px] max-h-screen bg-background shadow-2xl relative flex flex-col overflow-hidden sm:rounded-[40px] border-4 border-white">
         
         {isDemoMode && currentScreen !== 'login' && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-amber-500 text-[#0d1310] text-[9px] font-black uppercase rounded-full shadow-[0_4px_20px_rgba(245,158,11,0.3)] animate-slide-up border border-white/20">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-warning text-white text-[9px] font-black uppercase rounded-full shadow-lg animate-slide-up border border-white/20">
             DEMO MODE (OFFLINE)
           </div>
         )}
@@ -236,7 +245,7 @@ const App: React.FC = () => {
           <div className="absolute top-4 right-4 z-50 animate-scale-in">
              <button 
               onClick={handleLogout}
-              className="size-10 bg-surface/80 backdrop-blur shadow-sm border border-white/5 rounded-xl flex items-center justify-center text-white/40 hover:text-primary transition-all active:scale-90"
+              className="size-10 bg-white shadow-md border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary transition-all active:scale-90"
              >
                <span className="material-symbols-outlined text-[20px]">logout</span>
              </button>

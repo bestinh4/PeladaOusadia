@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pelada dos Amigos</title>
+    <title>Vatreni Manager</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
     <script type="importmap">
     {
@@ -31,12 +31,16 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: "#00ff84",
-                        background: "#0d1310",
-                        surface: "#16211c",
-                        card: "#1a2620",
-                        muted: "#6b7280",
-                        accent: "#ed1d23"
+                        primary: "#ff0000", // Vibrant Red
+                        secondary: "#173b6e", // Croatian Navy
+                        background: "#f8fafc", // Clean Light Gray/White
+                        surface: "#ffffff", // Pure White
+                        card: "#ffffff",
+                        muted: "#64748b",
+                        accent: "#ff0000",
+                        success: "#10b981",
+                        warning: "#f59e0b",
+                        navy: "#0a192f"
                     },
                     fontFamily: {
                         sans: ['Lexend', 'sans-serif']
@@ -47,33 +51,15 @@
                         'slide-in-right': 'slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'scale-in': 'scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
                         'float': 'float 4s ease-in-out infinite',
-                        'shimmer': 'shimmer 2.5s linear infinite',
+                        'shake': 'shake 0.4s cubic-bezier(.36,.07,.19,.97) both',
                     },
                     keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' }
-                        },
-                        slideUp: {
-                            '0%': { transform: 'translateY(24px)', opacity: '0' },
-                            '100%': { transform: 'translateY(0)', opacity: '1' }
-                        },
-                        slideInRight: {
-                            '0%': { transform: 'translateX(30px)', opacity: '0' },
-                            '100%': { transform: 'translateX(0)', opacity: '1' }
-                        },
-                        scaleIn: {
-                            '0%': { transform: 'scale(0.92)', opacity: '0' },
-                            '100%': { transform: 'scale(1)', opacity: '1' }
-                        },
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-12px)' }
-                        },
-                        shimmer: {
-                            '0%': { backgroundPosition: '-200% 0' },
-                            '100%': { backgroundPosition: '200% 0' }
-                        }
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { transform: 'translateY(24px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+                        slideInRight: { '0%': { transform: 'translateX(30px)', opacity: '0' }, '100%': { transform: 'translateX(0)', opacity: '1' } },
+                        scaleIn: { '0%': { transform: 'scale(0.92)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } },
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-12px)' } },
+                        shake: { '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' }, '20%, 80%': { transform: 'translate3d(2px, 0, 0)' }, '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' }, '40%, 60%': { transform: 'translate3d(4px, 0, 0)' } }
                     }
                 }
             }
@@ -84,43 +70,70 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
         body {
-            background-color: #0d1310;
-            color: #ffffff;
+            background-color: #f1f5f9;
+            color: #0a192f;
         }
 
         .stadium-bg {
-            background-image: linear-gradient(to bottom, rgba(22, 33, 28, 0.4), rgba(22, 33, 28, 0.95)), url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1000&auto=format&fit=crop');
+            background-image: linear-gradient(to bottom, rgba(23, 59, 110, 0.2), rgba(255, 255, 255, 1)), url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1000&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
         }
 
-        .neon-glow {
-            box-shadow: 0 0 20px rgba(0, 255, 132, 0.25);
+        .checkerboard-pattern {
+            background-image: 
+                linear-gradient(45deg, #ff0000 25%, transparent 25%), 
+                linear-gradient(-45deg, #ff0000 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #ff0000 75%), 
+                linear-gradient(-45deg, transparent 75%, #ff0000 75%);
+            background-size: 30px 30px;
+            background-position: 0 0, 0 15px, 15px -15px, -15px 0px;
         }
 
         .btn-primary {
-            background-color: #00ff84;
-            color: #0d1310;
+            background-color: #ff0000;
+            color: #ffffff;
             font-weight: 800;
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 14px 0 rgba(255, 0, 0, 0.3);
         }
-        .btn-primary:active {
-            transform: scale(0.94);
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
+            filter: brightness(1.1);
         }
 
         .premium-card {
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
+        
         .premium-card:hover {
             transform: translateY(-4px);
-            border-color: rgba(0, 255, 132, 0.2);
+            border-color: #ff0000;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
 
-        .delay-100 { animation-delay: 100ms; }
-        .delay-200 { animation-delay: 200ms; }
-        .delay-300 { animation-delay: 300ms; }
-        .delay-400 { animation-delay: 400ms; }
-        .delay-500 { animation-delay: 500ms; }
+        .list-item-hover:hover {
+            background: #f1f5f9;
+            padding-left: 0.75rem;
+            transition: all 0.2s ease-out;
+        }
+
+        .interactive-icon {
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .group:hover .interactive-icon { transform: scale(1.15); }
+
+        .neon-glow-red {
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+        }
     </style>
 </head>
 <body class="font-sans antialiased overflow-hidden">
