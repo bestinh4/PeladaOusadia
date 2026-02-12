@@ -48,7 +48,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onDemoMode }) => {
   };
 
   return (
-    <div className="h-full flex flex-col items-center justify-center bg-white relative overflow-hidden">
+    <div className="h-full flex flex-col items-center justify-center bg-white relative overflow-y-auto no-scrollbar py-10">
       {/* Dynamic Checkerboard Background */}
       <div className="absolute inset-0 opacity-[0.05] checkerboard-pattern pointer-events-none"></div>
       
@@ -56,7 +56,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onDemoMode }) => {
       <div className="absolute top-[-15%] left-[-15%] w-[60%] h-[60%] bg-primary rounded-full blur-[140px] opacity-[0.08]"></div>
       <div className="absolute bottom-[-15%] right-[-15%] w-[60%] h-[60%] bg-secondary rounded-full blur-[140px] opacity-[0.08]"></div>
 
-      <div className="w-full max-w-[380px] bg-white rounded-[3.5rem] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.1)] p-10 flex flex-col items-center gap-10 relative z-10 animate-scale-in border border-slate-100">
+      <div className="w-full max-w-[380px] bg-white rounded-[3.5rem] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.1)] p-10 flex flex-col items-center gap-10 relative z-10 animate-scale-in border border-slate-100 mx-4">
         
         {/* Vatreni Shield Logo */}
         <div className="relative group">

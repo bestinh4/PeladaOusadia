@@ -14,9 +14,9 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, currentPlayer, onTog
   const isConfirmed = currentPlayer?.confirmed || false;
 
   return (
-    <div className="h-full bg-background overflow-y-auto no-scrollbar pb-32 pt-6">
+    <div className="h-full bg-background overflow-y-auto no-scrollbar pb-32 pt-6 px-6">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 mb-8 animate-fade-in">
+      <header className="flex items-center justify-between mb-8 animate-fade-in">
         <h1 className="text-xl font-black text-secondary italic tracking-tighter">Vatreni Manager</h1>
         <button 
           onClick={() => onNavigate('finance')}
@@ -28,7 +28,7 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, currentPlayer, onTog
       </header>
 
       {/* Hero Section */}
-      <div className="px-6 space-y-4">
+      <div className="space-y-4">
         <div className="flex items-center justify-between animate-slide-up">
           <h2 className="text-2xl font-black text-secondary italic">Próxima Partida</h2>
           <span className="px-3 py-1 bg-primary/10 rounded-full text-[10px] font-black text-primary tracking-widest uppercase animate-pulse border border-primary/20">Em 3 Dias</span>
@@ -72,7 +72,7 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, currentPlayer, onTog
       </div>
 
       {/* Action Buttons */}
-      <div className="px-6 mt-8 space-y-3 animate-slide-up delay-200">
+      <div className="mt-8 space-y-3 animate-slide-up delay-200">
         {!isConfirmed ? (
           <button 
             onClick={() => currentPlayer && onToggleConfirm(currentPlayer.id)}
@@ -93,7 +93,7 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, currentPlayer, onTog
       </div>
 
       {/* Status Card */}
-      <div className="px-6 mt-6 animate-slide-up delay-300">
+      <div className="mt-6 animate-slide-up delay-300">
         <div className="bg-white border border-slate-100 rounded-3xl p-6 flex items-center justify-between premium-card group cursor-default shadow-sm">
           <div className="flex items-center gap-4">
             <div className="relative">
@@ -121,7 +121,7 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, currentPlayer, onTog
       </div>
 
       {/* Mini Stats Grid */}
-      <div className="px-6 mt-6 grid grid-cols-2 gap-4 animate-slide-up delay-400">
+      <div className="mt-6 grid grid-cols-2 gap-4 animate-slide-up delay-400">
         <div 
           onClick={() => onNavigate('players')}
           className="bg-white border border-slate-100 rounded-3xl p-6 space-y-4 premium-card group cursor-pointer shadow-sm"
