@@ -8,48 +8,76 @@ interface BottomNavProps {
 }
 
 const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onNavigate }) => {
+  // Mapping screens to navigation items as per user request
   const navItems = [
-    { id: 'home', icon: 'home', label: 'Home' },
-    { id: 'players', icon: 'groups', label: 'Time' },
+    { id: 'home', icon: 'home', label: 'Início' },
+    { id: 'players', icon: 'groups', label: 'Elenco' },
     { id: 'scout', icon: 'leaderboard', label: 'Scout' },
     { id: 'profile', icon: 'person', label: 'Perfil' },
   ];
 
   return (
-    <nav className="absolute bottom-0 w-full bg-white dark:bg-[#1a0a0b] border-t border-gray-100 dark:border-white/5 pb-8 pt-3 px-6 shadow-[0_-4px_20px_-2px_rgba(0,0,0,0.05)] z-50">
-      <ul className="flex justify-between items-center relative">
-        {navItems.map((item) => {
+    <nav className="absolute bottom-0 w-full bg-[#16211c] border-t border-white/5 pb-8 pt-3 px-6 z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+      <ul className="flex justify-between items-end relative h-14">
+        {/* Left Side Items */}
+        {navItems.slice(0, 2).map((item) => {
           const isActive = activeScreen === item.id;
           return (
-            <li key={item.id}>
+            <li key={item.id} className="flex-1">
               <button
                 onClick={() => onNavigate(item.id as Screen)}
-                className={`flex flex-col items-center gap-1 transition-all duration-300 relative ${
-                  isActive ? 'text-primary' : 'text-gray-400 dark:text-gray-500'
+                className={`w-full flex flex-col items-center gap-1 transition-all duration-300 ${
+                  isActive ? 'text-[#00ff84] scale-110' : 'text-gray-500'
                 }`}
               >
-                <span className={`material-symbols-outlined text-[28px] ${isActive ? 'font-bold fill-current' : ''}`}>
+                <span className={`material-symbols-outlined text-[26px] ${isActive ? 'font-bold' : ''}`} style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
                   {item.icon}
                 </span>
-                <span className={`text-[10px] font-bold ${isActive ? 'opacity-100' : 'opacity-0'}`}>
+                <span className={`text-[9px] font-black uppercase tracking-widest ${isActive ? 'opacity-100' : 'opacity-60'}`}>
                   {item.label}
                 </span>
                 {isActive && (
-                  <span className="absolute -bottom-3 w-1 h-1 bg-primary rounded-full"></span>
+                  <div className="absolute -bottom-2 w-1 h-1 bg-[#00ff84] rounded-full shadow-[0_0_8px_#00ff84]"></div>
                 )}
               </button>
             </li>
           );
         })}
-        {/* Centered Floating Action Placeholder for Create Match Screen */}
-        <li className="absolute left-1/2 -translate-x-1/2 -top-12">
-           <button 
-            onClick={() => onNavigate('create-match')}
-            className="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/40 border-4 border-surface-gray dark:border-gray-900 transition-transform active:scale-90"
-           >
-             <span className="material-symbols-outlined text-[32px]">add</span>
-           </button>
+
+        {/* Floating Action Button (Center) */}
+        <li className="relative flex-1 flex justify-center">
+          <button 
+            onClick={() => onNavigate('draw')}
+            className="absolute -top-10 size-15 bg-[#00ff84] text-[#0d1310] rounded-2xl flex items-center justify-center shadow-[0_0_25px_rgba(0,255,132,0.4)] border-[6px] border-[#0d1310] active:scale-90 transition-all hover:rotate-90"
+          >
+            <span className="material-symbols-outlined text-[32px] font-black">add</span>
+          </button>
         </li>
+
+        {/* Right Side Items */}
+        {navItems.slice(2).map((item) => {
+          const isActive = activeScreen === item.id;
+          return (
+            <li key={item.id} className="flex-1">
+              <button
+                onClick={() => onNavigate(item.id as Screen)}
+                className={`w-full flex flex-col items-center gap-1 transition-all duration-300 ${
+                  isActive ? 'text-[#00ff84] scale-110' : 'text-gray-500'
+                }`}
+              >
+                <span className={`material-symbols-outlined text-[26px] ${isActive ? 'font-bold' : ''}`} style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
+                  {item.icon}
+                </span>
+                <span className={`text-[9px] font-black uppercase tracking-widest ${isActive ? 'opacity-100' : 'opacity-60'}`}>
+                  {item.label}
+                </span>
+                {isActive && (
+                  <div className="absolute -bottom-2 w-1 h-1 bg-[#00ff84] rounded-full shadow-[0_0_8px_#00ff84]"></div>
+                )}
+              </button>
+            </li>
+          );
+        })}
       </ul>
     </nav>
   );

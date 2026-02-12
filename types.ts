@@ -7,6 +7,8 @@ export interface Player {
   avatar: string;
   confirmed: boolean;
   goals: number;
+  assists?: number;
+  matches?: number;
   club?: string;
   number?: number;
   rating: number;
@@ -20,15 +22,4 @@ export interface Player {
   };
 }
 
-export interface Match {
-  id: string;
-  type: 'Futsal' | 'Society' | 'Campo';
-  location: string;
-  date: string;
-  time: string;
-  duration: string;
-  price: number;
-  bibsRequired: boolean;
-}
-
-export type Screen = 'login' | 'home' | 'players' | 'scout' | 'create-match' | 'profile';
+export type Screen = 'login' | 'home' | 'players' | 'scout' | 'create-match' | 'profile' | 'draw' | 'finance';

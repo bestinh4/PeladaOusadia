@@ -40,7 +40,7 @@ const App: React.FC = () => {
 
   // Player Data Sync
   useEffect(() => {
-    if (loading) return; // Wait for auth check
+    if (loading) return;
 
     if (isDemoMode) {
       const saved = localStorage.getItem('oa_players');
@@ -116,10 +116,8 @@ const App: React.FC = () => {
     }
   };
 
-  // Optimized Avatar Handling
   const handleUpdateAvatar = async (id: string, file: File | string) => {
     if (isDemoMode) {
-      // In demo mode, we still use Base64 as there is no backend storage
       const avatarUrl = typeof file === 'string' ? file : await fileToBase64(file);
       const updated = players.map(p => p.id === id ? { ...p, avatar: avatarUrl } : p);
       setPlayers(updated);
@@ -132,16 +130,13 @@ const App: React.FC = () => {
 
     try {
       if (file instanceof File) {
-        // 1. Upload to Storage and get CDN URL
         const cdnUrl = await playerService.uploadAvatarToStorage(id, file);
-        // 2. Update Firestore reference
         await playerService.updateAvatar(id, cdnUrl);
       } else {
-        // Fallback if raw URL provided
         await playerService.updateAvatar(id, file);
       }
     } catch (err: any) {
-      alert("Storage Error: Ensure Firebase Storage is enabled in your project. " + err.message);
+      alert("Storage Error: " + err.message);
     }
   };
 
@@ -161,107 +156,87 @@ const App: React.FC = () => {
   };
 
   const renderScreen = () => {
+    let screenContent;
+    
     if (error && !isDemoMode && user) {
-      return (
-        <div className="h-full flex flex-col items-center justify-center p-8 bg-white text-center">
-          <div className="size-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6">
+      screenContent = (
+        <div className="h-full flex flex-col items-center justify-center p-8 bg-background text-center animate-fade-in">
+          <div className="size-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mb-6 animate-scale-in">
             <span className="material-symbols-outlined text-[32px]">gpp_bad</span>
           </div>
-          <h2 className="text-xl font-black text-gray-900 mb-2 italic uppercase tracking-tighter">Permission Required</h2>
-          <p className="text-xs text-gray-400 mb-6 leading-relaxed px-4">
+          <h2 className="text-xl font-black text-white mb-2 italic uppercase tracking-tighter">Permission Required</h2>
+          <p className="text-xs text-white/40 mb-6 leading-relaxed px-4">
             {error}
           </p>
-          
-          <div className="w-full bg-navy/5 p-4 rounded-2xl text-left font-mono text-[9px] text-gray-600 mb-6 border border-navy/10">
-            <p className="font-bold text-navy/40 mb-1">// Firebase Firestore Rules:</p>
-            <p>match /databases/{"{db}"}/documents {"{"}</p>
-            <p className="ml-2 font-bold text-primary">match /{"{document=**}"} {"{"}</p>
-            <p className="ml-4 font-bold text-primary">allow read, write: if request.auth != null;</p>
-            <p className="ml-2">{"}"}</p>
-            <p>{"}"}</p>
-          </div>
-
-          <div className="w-full space-y-3">
+          <div className="w-full space-y-3 animate-slide-up delay-100">
             <button 
               onClick={() => window.location.reload()}
-              className="w-full h-12 bg-navy text-white rounded-xl font-bold text-sm shadow-lg active:scale-95"
+              className="w-full h-12 bg-white text-background rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all"
             >
               Try Again
             </button>
             <button 
               onClick={() => setIsDemoMode(true)}
-              className="w-full h-12 bg-white border-2 border-primary text-primary rounded-xl font-bold text-sm active:scale-95"
+              className="w-full h-12 bg-transparent border-2 border-primary text-primary rounded-xl font-bold text-sm active:scale-95 transition-all"
             >
               Use Offline Mode
             </button>
           </div>
         </div>
       );
-    }
-
-    if (loading) {
-      return (
-        <div className="h-full flex flex-col items-center justify-center bg-white gap-4">
-          <div className="size-12 border-4 border-gray-100 border-t-primary rounded-full animate-spin"></div>
-          <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest animate-pulse">Initializing...</span>
+    } else if (loading) {
+      screenContent = (
+        <div className="h-full flex flex-col items-center justify-center bg-background gap-4 animate-fade-in">
+          <div className="size-12 border-4 border-white/5 border-t-primary rounded-full animate-spin"></div>
+          <span className="text-[10px] font-black text-white/20 uppercase tracking-widest animate-pulse">Initializing...</span>
         </div>
       );
+    } else {
+      switch (currentScreen) {
+        case 'login':
+          screenContent = <LoginScreen onLogin={() => navigateTo('home')} onDemoMode={() => { setIsDemoMode(true); navigateTo('home'); }} />;
+          break;
+        case 'home':
+          screenContent = <ArenaScreen onNavigate={navigateTo} />;
+          break;
+        case 'players':
+          screenContent = <PlayerListScreen players={players} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} />;
+          break;
+        case 'scout':
+          screenContent = <ScoutScreen players={players} onNavigate={navigateTo} />;
+          break;
+        case 'profile':
+          screenContent = selectedPlayer ? (
+            <ProfileScreen player={selectedPlayer} players={players} onNavigate={navigateTo} onUpdateAvatar={handleUpdateAvatar} />
+          ) : <ArenaScreen onNavigate={navigateTo} />;
+          break;
+        default:
+          screenContent = <ArenaScreen onNavigate={navigateTo} />;
+      }
     }
 
-    switch (currentScreen) {
-      case 'login':
-        return (
-          <LoginScreen 
-            onLogin={() => navigateTo('home')} 
-            onDemoMode={() => {
-              setIsDemoMode(true);
-              navigateTo('home');
-            }} 
-          />
-        );
-      case 'home':
-        return <ArenaScreen onNavigate={navigateTo} />;
-      case 'players':
-        return (
-          <PlayerListScreen 
-            players={players} 
-            onToggleConfirm={toggleConfirm} 
-            onNavigate={navigateTo} 
-          />
-        );
-      case 'scout':
-        return <ScoutScreen players={players} onNavigate={navigateTo} />;
-      case 'create-match':
-        return <CreateMatchScreen onNavigate={navigateTo} />;
-      case 'profile':
-        return selectedPlayer ? (
-          <ProfileScreen 
-            player={selectedPlayer} 
-            players={players} 
-            onNavigate={navigateTo} 
-            onUpdateAvatar={handleUpdateAvatar}
-          />
-        ) : <ArenaScreen onNavigate={navigateTo} />;
-      default:
-        return <ArenaScreen onNavigate={navigateTo} />;
-    }
+    return (
+      <div key={currentScreen} className="h-full w-full">
+        {screenContent}
+      </div>
+    );
   };
 
   return (
-    <div className="flex justify-center min-h-screen bg-gray-200 lg:py-8 overflow-hidden">
-      <div className="w-full max-w-[430px] h-[932px] max-h-screen bg-surface-gray shadow-2xl relative flex flex-col overflow-hidden sm:rounded-[40px] border-8 border-white dark:border-gray-900">
+    <div className="flex justify-center min-h-screen bg-[#080c0a] lg:py-8 overflow-hidden">
+      <div className="w-full max-w-[430px] h-[932px] max-h-screen bg-background shadow-2xl relative flex flex-col overflow-hidden sm:rounded-[40px] border-4 border-white/5">
         
         {isDemoMode && currentScreen !== 'login' && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-amber-500 text-white text-[9px] font-black uppercase rounded-full shadow-lg animate-bounce border-2 border-white/20">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-amber-500 text-[#0d1310] text-[9px] font-black uppercase rounded-full shadow-[0_4px_20px_rgba(245,158,11,0.3)] animate-slide-up border border-white/20">
             DEMO MODE (OFFLINE)
           </div>
         )}
 
-        {user && (
-          <div className="absolute top-4 right-4 z-50 animate-fade-in-up">
+        {user && currentScreen !== 'login' && (
+          <div className="absolute top-4 right-4 z-50 animate-scale-in">
              <button 
               onClick={handleLogout}
-              className="size-10 bg-white/80 backdrop-blur shadow-sm border border-white rounded-xl flex items-center justify-center text-gray-400 hover:text-primary transition-all active:scale-90"
+              className="size-10 bg-surface/80 backdrop-blur shadow-sm border border-white/5 rounded-xl flex items-center justify-center text-white/40 hover:text-primary transition-all active:scale-90"
              >
                <span className="material-symbols-outlined text-[20px]">logout</span>
              </button>
@@ -271,6 +246,7 @@ const App: React.FC = () => {
         <div className="flex-1 overflow-hidden relative">
           {renderScreen()}
         </div>
+
         {currentScreen !== 'login' && (!error || isDemoMode) && (
           <BottomNav activeScreen={currentScreen} onNavigate={navigateTo} />
         )}
