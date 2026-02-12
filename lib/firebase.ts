@@ -16,8 +16,8 @@ const firebaseConfig = {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
 // Initialize services with the app instance.
-// Using the official Google gstatic CDN in index.html ensures these
-// modules register themselves correctly with the initialized 'app'.
+// Using the official gstatic CDN ensures these internal services are properly
+// registered within the Firebase core registry.
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const googleProvider = new GoogleAuthProvider();
