@@ -16,7 +16,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isUploading, setIsUploading] = useState(false); 
-  const [isImageSyncing, setIsImageSyncing] = useState(false); 
+  const [isImageLoading, setIsImageLoading] = useState(true); 
   const [editData, setEditData] = useState({
     name: player.name,
     position: player.position,
@@ -25,7 +25,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
     stats: { ...player.stats }
   });
 
+  // Reseta o estado de carregamento e dados de edição quando o jogador visualizado muda
   useEffect(() => {
+    setIsImageLoading(true);
     setEditData({
       name: player.name,
       position: player.position,
@@ -33,15 +35,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
       number: player.number || 0,
       stats: { ...player.stats }
     });
-  }, [player.id]);
-
-  useEffect(() => {
-    if (player.avatar) {
-      setIsImageSyncing(true);
-      const timer = setTimeout(() => setIsImageSyncing(false), 8000);
-      return () => clearTimeout(timer);
-    }
-  }, [player.avatar]);
+  }, [player.id, player.avatar]);
 
   const isOwnProfile = currentPlayer?.id === player.id;
   const isAdmin = currentPlayer?.role === 'admin';
@@ -55,6 +49,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
     const file = e.target.files?.[0];
     if (file) {
       setIsUploading(true);
+      setIsImageLoading(true); // Força shimmer ao trocar imagem
       try {
         await onUpdateAvatar(player.id, file);
       } catch (err) {
@@ -107,10 +102,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
     }
   };
 
-  const handleImageLoad = () => setIsImageSyncing(false);
-  const handleImageError = () => setIsImageSyncing(false);
+  const handleImageLoad = () => setIsImageLoading(false);
+  const handleImageError = () => setIsImageLoading(false);
 
-  const showSpinner = isUploading || isImageSyncing;
   const displayRating = (player.rating / 20).toFixed(1);
 
   return (
@@ -118,7 +112,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
       <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
 
       <header className="flex items-center justify-between px-6 py-6 sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-100">
-        <button onClick={() => onNavigate('home')} className="size-10 bg-slate-50 text-secondary rounded-xl flex items-center justify-center active:scale-90 border border-slate-100">
+        <button onClick={() => onNavigate('home')} className="size-10 bg-slate-50 text-secondary rounded-xl flex items-center justify-center active:scale-90 border border-slate-100 transition-transform">
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
         <div className="text-center">
@@ -148,19 +142,44 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
           <div className="absolute inset-0 bg-gradient-to-b from-secondary/5 to-transparent pointer-events-none"></div>
           
           <div className="flex flex-col items-center relative z-10">
-            <div className={`relative mb-8 group ${isOwnProfile && !isUploading ? 'cursor-pointer active:scale-95' : ''} transition-all`} onClick={handleAvatarClick}>
-              <div className="size-40 rounded-full border-8 border-white shadow-xl relative transition-transform bg-slate-100 overflow-hidden flex items-center justify-center">
-                 {isImageSyncing && <div className="absolute inset-0 shimmer-bg animate-shimmer z-0"></div>}
-                 <img key={player.avatar} src={player.avatar} loading="lazy" className={`size-full object-cover transition-all duration-500 ${!isImageSyncing ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`} alt={player.name} onLoad={handleImageLoad} onError={handleImageError} />
+            <div 
+              className={`relative mb-8 group ${isOwnProfile && !isUploading ? 'cursor-pointer active:scale-95' : ''} transition-all`} 
+              onClick={handleAvatarClick}
+            >
+              <div className="size-40 rounded-full border-8 border-white shadow-xl relative bg-slate-100 overflow-hidden flex items-center justify-center transition-all duration-300">
+                 
+                 {/* Shimmer Placeholder Animado */}
+                 {isImageLoading && (
+                   <div className="absolute inset-0 shimmer-bg animate-shimmer z-0"></div>
+                 )}
+
+                 {/* Imagem com Lazy Loading e Transição Suave */}
+                 <img 
+                   key={player.avatar}
+                   src={player.avatar} 
+                   loading="lazy"
+                   className={`size-full object-cover transition-all duration-500 ease-in-out ${isImageLoading ? 'opacity-0 scale-95 blur-sm' : 'opacity-100 scale-100 blur-0'}`} 
+                   alt={player.name}
+                   onLoad={handleImageLoad}
+                   onError={handleImageError}
+                 />
+                 
+                 {/* Feedback de Upload em tempo real */}
                  {isUploading && (
-                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white backdrop-blur-sm z-20">
+                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white backdrop-blur-sm z-20 animate-fade-in">
                       <div className="size-8 border-4 border-white/30 border-t-white rounded-full animate-spin mb-2"></div>
-                      <span className="text-[8px] font-black uppercase tracking-widest animate-pulse">Sincronizando...</span>
+                      <span className="text-[8px] font-black uppercase tracking-widest animate-pulse">Enviando...</span>
                     </div>
                  )}
-                 {isOwnProfile && !showSpinner && <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white backdrop-blur-[2px]"><span className="material-symbols-outlined text-2xl">photo_camera</span></div>}
+
+                 {isOwnProfile && !isUploading && !isImageLoading && (
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white backdrop-blur-[2px]">
+                      <span className="material-symbols-outlined text-2xl">photo_camera</span>
+                    </div>
+                 )}
               </div>
-              <div className="absolute -bottom-2 -right-2 size-14 bg-secondary text-white rounded-2xl border-4 border-white flex flex-col items-center justify-center shadow-xl rotate-6">
+
+              <div className="absolute -bottom-2 -right-2 size-14 bg-secondary text-white rounded-2xl border-4 border-white flex flex-col items-center justify-center shadow-xl rotate-6 animate-scale-in">
                  <span className="text-xl font-black italic leading-none">{player.rating}</span>
                  <span className="text-[8px] font-black uppercase tracking-tighter opacity-50">OVR</span>
               </div>
@@ -191,7 +210,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
         {/* ADMIN TOOLS PANEL */}
         {isAdmin && !isOwnProfile && (
           <div className="px-6 mb-12 animate-slide-up">
-            <div className="bg-slate-900 rounded-[2.5rem] p-6 text-white overflow-hidden relative">
+            <div className="bg-slate-900 rounded-[2.5rem] p-6 text-white overflow-hidden relative shadow-2xl">
               <div className="absolute top-0 right-0 size-32 bg-primary/10 rounded-bl-full pointer-events-none"></div>
               <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-4">Painel Administrativo</p>
               <div className="flex flex-col gap-3">
