@@ -17,13 +17,17 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
   
   const GAME_FEE = activeMatch?.price || 0;
   const userBalance = currentPlayer?.paid ? 0 : (isConfirmed ? GAME_FEE : 0);
+  const CROATIA_LOGO = "https://upload.wikimedia.org/wikipedia/en/d/d0/Croatian_Football_Federation_logo.svg";
 
   return (
     <div className="h-full bg-background overflow-y-auto no-scrollbar pb-36 px-6">
       <header className="flex items-center justify-between pt-10 pb-6 sticky top-0 z-40 bg-background/80 backdrop-blur-xl -mx-6 px-6 border-b border-slate-100">
-        <div>
-          <h1 className="text-2xl font-black text-secondary italic tracking-tighter leading-none">O<span className="text-primary">&</span>A</h1>
-          <p className="text-[9px] font-black text-primary uppercase tracking-[0.4em] mt-1.5">Elite Manager</p>
+        <div className="flex items-center gap-3">
+          <img src={CROATIA_LOGO} alt="Logo" className="size-8 object-contain" />
+          <div>
+            <h1 className="text-xl font-black text-secondary italic tracking-tighter leading-none">O<span className="text-primary">&</span>A</h1>
+            <p className="text-[8px] font-black text-primary uppercase tracking-[0.3em] mt-1">Elite Manager</p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {isAdmin && (

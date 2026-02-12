@@ -12,6 +12,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [error, setError] = useState<{ code: string; message: string; domain?: string } | null>(null);
 
+  const CROATIA_LOGO = "https://upload.wikimedia.org/wikipedia/en/d/d0/Croatian_Football_Federation_logo.svg";
+
   const handleGoogleLogin = async () => {
     if (isAuthenticating || loginSuccess) return;
     
@@ -40,9 +42,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
       <div className="w-full max-w-[380px] bg-white rounded-[3.5rem] shadow-[0_40px_80px_-15px_rgba(0,81,158,0.15)] p-10 flex flex-col items-center gap-8 relative z-10 animate-scale-in border border-slate-100">
         
         <div className="relative group">
-          <div className="size-28 bg-secondary rounded-[2.5rem] flex items-center justify-center shadow-2xl relative overflow-hidden transition-all duration-500 group-hover:rotate-6">
-             <div className="absolute inset-0 opacity-10 kockasti-pattern scale-75"></div>
-             <span className="material-symbols-outlined text-[56px] text-white z-10">sports_soccer</span>
+          <div className="size-32 bg-white rounded-[2.5rem] flex items-center justify-center shadow-xl relative overflow-hidden transition-all duration-500 group-hover:rotate-6 p-4">
+             <img src={CROATIA_LOGO} alt="Croatia Logo" className="w-full h-full object-contain z-10" />
           </div>
           {loginSuccess && (
             <div className="absolute -top-2 -right-2 size-10 bg-success rounded-full flex items-center justify-center border-4 border-white animate-scale-in shadow-lg">

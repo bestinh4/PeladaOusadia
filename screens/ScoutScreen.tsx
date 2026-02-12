@@ -12,6 +12,7 @@ const ScoutScreen: React.FC<ScoutScreenProps> = ({ players, onNavigate }) => {
   const sortedPlayers = [...players].sort((a, b) => b.goals - a.goals);
   const filteredPlayers = filter === 'Todos' ? sortedPlayers : sortedPlayers.filter(p => p.position === filter);
   const filters = ['Todos', 'Forward', 'Midfielder', 'Defender', 'Goalkeeper'];
+  const CROATIA_LOGO = "https://upload.wikimedia.org/wikipedia/en/d/d0/Croatian_Football_Federation_logo.svg";
 
   return (
     <div className="h-full bg-background overflow-y-auto no-scrollbar pb-32">
@@ -23,11 +24,9 @@ const ScoutScreen: React.FC<ScoutScreenProps> = ({ players, onNavigate }) => {
            <button onClick={() => onNavigate('home')} className="size-11 bg-white/5 backdrop-blur-xl rounded-2xl flex items-center justify-center text-white active:scale-90 transition-all border border-white/10">
              <span className="material-symbols-outlined">chevron_left</span>
            </button>
-           <div className="text-center">
-             <h2 className="text-[10px] font-black tracking-[0.4em] text-white uppercase italic leading-none mb-1">
-               Ousadia <span className="text-primary">&</span> Alegria
-             </h2>
-             <p className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em]">Elite Manager</p>
+           <div className="flex flex-col items-center">
+             <img src={CROATIA_LOGO} alt="HNS" className="size-8 object-contain mb-1" />
+             <p className="text-[7px] font-black text-white/40 uppercase tracking-[0.2em]">Elite Ranking</p>
            </div>
            <div className="size-11"></div>
         </div>
