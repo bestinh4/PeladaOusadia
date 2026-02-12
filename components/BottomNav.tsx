@@ -18,7 +18,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onNavigate }) => {
   return (
     <nav className="w-full bg-white border-t border-slate-100 pb-safe pt-2 px-4 sm:px-6 z-50 shadow-[0_-8px_30px_rgba(0,0,0,0.05)]">
       <ul className="flex justify-between items-center h-16 relative">
-        {/* Left Side Items */}
+        {/* Lado Esquerdo */}
         <div className="flex flex-1 justify-around">
           {navItems.slice(0, 2).map((item) => {
             const isActive = activeScreen === item.id;
@@ -45,19 +45,22 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onNavigate }) => {
           })}
         </div>
 
-        {/* Floating Action Button (Center) */}
+        {/* Botão de Ação Central (Sorteio) */}
         <li className="relative flex-shrink-0 mx-2">
           <div className="relative -top-6">
             <button 
               onClick={() => onNavigate('draw')}
-              className="size-14 sm:size-16 bg-primary text-white rounded-2xl flex items-center justify-center shadow-[0_8px_25px_rgba(255,0,0,0.3)] border-[6px] border-background active:scale-90 transition-all hover:rotate-12 hover:scale-105"
+              className={`size-14 sm:size-16 rounded-2xl flex items-center justify-center shadow-[0_8px_25px_rgba(255,0,0,0.3)] border-[6px] border-background active:scale-90 transition-all hover:rotate-12 hover:scale-105 ${
+                activeScreen === 'draw' ? 'bg-secondary text-white' : 'bg-primary text-white'
+              }`}
+              title="Sortear Times"
             >
-              <span className="material-symbols-outlined text-[28px] sm:text-[32px] font-black">add</span>
+              <span className="material-symbols-outlined text-[28px] sm:text-[32px] font-black">shuffle</span>
             </button>
           </div>
         </li>
 
-        {/* Right Side Items */}
+        {/* Lado Direito */}
         <div className="flex flex-1 justify-around">
           {navItems.slice(2).map((item) => {
             const isActive = activeScreen === item.id;
