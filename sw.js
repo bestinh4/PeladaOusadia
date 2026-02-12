@@ -1,15 +1,13 @@
 
-const CACHE_NAME = 'oa-elite-v1.2';
+const CACHE_NAME = 'oa-elite-v1.3';
 const ASSETS_TO_CACHE = [
-  './',
-  'index.html',
-  'manifest.json',
-  'https://upload.wikimedia.org/wikipedia/pt/c/cf/Croatia_football_federation.png',
-  'https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap',
-  'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block'
+  '/',
+  '/index.html',
+  '/manifest.json',
+  'https://upload.wikimedia.org/wikipedia/pt/c/cf/Croatia_football_federation.png'
 ];
 
-// Instalação
+// Instalação: Força o cache dos arquivos críticos
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
@@ -19,7 +17,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Ativação e limpeza de cache
+// Ativação: Limpa caches obsoletos
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -31,33 +29,39 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim();
 });
 
-// Estratégia: Network First com Fallback para Cache
+// Interceptação de requisições
 self.addEventListener('fetch', (event) => {
-  // Ignorar requisições de extensões ou esquemas não suportados
   if (!event.request.url.startsWith('http')) return;
 
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // Se a resposta for válida, clonar e salvar no cache para uso futuro
-        if (response.status === 200) {
-          const responseClone = response.clone();
+    caches.match(event.request).then((cachedResponse) => {
+      // Se estiver no cache, retorna imediatamente (Cache First para assets)
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      // Se não estiver no cache, busca na rede
+      return fetch(event.request).then((networkResponse) => {
+        // Se a rede retornar 404 e for uma navegação (URL digitada ou link)
+        // servimos o index.html do cache (SPA Fallback)
+        if (networkResponse.status === 404 && event.request.mode === 'navigate') {
+          return caches.match('/index.html') || caches.match('/');
+        }
+
+        // Caso contrário, retorna a resposta da rede e salva no cache se for válida
+        if (networkResponse.status === 200) {
+          const responseClone = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseClone);
           });
         }
-        return response;
-      })
-      .catch(() => {
-        // Em caso de erro (offline) ou 404, tenta o cache
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) return cachedResponse;
-          
-          // Se for uma navegação e nada foi encontrado, serve o index.html (SPA Fallback)
-          if (event.request.mode === 'navigate') {
-            return caches.match('index.html') || caches.match('./');
-          }
-        });
-      })
+        return networkResponse;
+      }).catch(() => {
+        // Se a rede falhar totalmente (offline)
+        if (event.request.mode === 'navigate') {
+          return caches.match('/index.html') || caches.match('/');
+        }
+      });
+    })
   );
 });
