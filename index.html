@@ -3,7 +3,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Ousadia & Alegria | Elite Manager</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
     <script type="importmap">
@@ -75,10 +75,29 @@
           font-size: 24px;
         }
 
+        :root {
+            --app-height: 100%;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            position: fixed; /* Previne scroll elástico no iOS */
+        }
+
         body {
             background-color: #f8fafc;
             color: #00519E;
+            font-family: 'Lexend', sans-serif;
             -webkit-tap-highlight-color: transparent;
+        }
+
+        #root {
+            height: 100%;
+            width: 100%;
         }
 
         .pro-shadow {
@@ -104,9 +123,15 @@
         input:focus {
             box-shadow: 0 0 0 2px rgba(227, 6, 19, 0.1);
         }
+
+        @supports (height: 100dvh) {
+            :root {
+                --app-height: 100dvh;
+            }
+        }
     </style>
- head>
-<body class="font-sans antialiased overflow-hidden">
+</head>
+<body class="font-sans antialiased">
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
 </body>

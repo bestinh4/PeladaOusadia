@@ -75,7 +75,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 }
 
 const ScreenLoader = () => (
-  <div className="h-full flex flex-col items-center justify-center bg-background gap-4">
+  <div className="h-full w-full flex flex-col items-center justify-center bg-background gap-4">
     <div className="size-10 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
     <span className="text-[9px] font-black text-secondary/40 uppercase tracking-widest">Sincronizando...</span>
   </div>
@@ -175,7 +175,7 @@ const App: React.FC = () => {
   const renderScreen = () => {
     if (error && user) {
       return (
-        <div className="h-full flex flex-col items-center justify-center p-8 bg-background text-center">
+        <div className="h-full w-full flex flex-col items-center justify-center p-8 bg-background text-center">
           <span className="material-symbols-outlined text-red-500 text-5xl mb-4">error</span>
           <h2 className="text-xl font-black text-secondary uppercase italic">Erro de Conexão</h2>
           <p className="text-xs text-secondary/60 mb-6">{error}</p>
@@ -223,8 +223,11 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-center min-h-screen bg-slate-100 lg:py-6 overflow-hidden">
-      <div className="w-full max-w-none md:max-w-[430px] h-screen md:h-[932px] md:max-h-[95vh] bg-background shadow-2xl relative flex flex-col overflow-hidden md:rounded-[48px] border-none md:border-4 md:border-white transition-all">
+    <div className="flex justify-center items-center h-full w-full bg-slate-100 overflow-hidden">
+      <div 
+        className="w-full h-full md:max-w-[430px] md:h-[92vh] md:max-h-[932px] md:my-auto bg-background shadow-2xl relative flex flex-col overflow-hidden md:rounded-[48px] border-none md:border-4 md:border-white transition-all duration-500 ease-in-out"
+        style={{ height: 'var(--app-height)' }}
+      >
         <div className="flex-1 overflow-hidden relative">
           {renderScreen()}
         </div>
