@@ -64,6 +64,11 @@ const App: React.FC = () => {
         unsubscribePlayers = playerService.subscribeToPlayers(
           (data) => {
             setPlayers(data);
+            // Sync selected player if currently viewing profile
+            if (selectedPlayer) {
+              const updated = data.find(p => p.id === selectedPlayer.id);
+              if (updated) setSelectedPlayer(updated);
+            }
           },
           (err) => {
             console.error("Subscription error", err);
@@ -85,7 +90,7 @@ const App: React.FC = () => {
     return () => {
       if (unsubscribePlayers) unsubscribePlayers();
     };
-  }, [user, isDemoMode, loading]);
+  }, [user, isDemoMode, loading, selectedPlayer?.id]);
 
   const navigateTo = (screen: Screen, data?: any) => {
     if (screen === 'profile' && data) {
@@ -109,6 +114,25 @@ const App: React.FC = () => {
       } catch (err: any) {
         alert("Firebase Error: " + (err.code === 'permission-denied' ? "Insufficient permissions." : err.message));
       }
+    }
+  };
+
+  const handleUpdateAvatar = async (id: string, avatarUrl: string) => {
+    if (isDemoMode) {
+      const updated = players.map(p => p.id === id ? { ...p, avatar: avatarUrl } : p);
+      setPlayers(updated);
+      localStorage.setItem('oa_players', JSON.stringify(updated));
+      if (selectedPlayer?.id === id) {
+        setSelectedPlayer({ ...selectedPlayer, avatar: avatarUrl });
+      }
+      return;
+    }
+
+    try {
+      await playerService.updateAvatar(id, avatarUrl);
+      // Selected player will be updated via the onSnapshot observer in useEffect
+    } catch (err: any) {
+      alert("Error updating avatar: " + err.message);
     }
   };
 
@@ -193,7 +217,12 @@ const App: React.FC = () => {
         return <CreateMatchScreen onNavigate={navigateTo} />;
       case 'profile':
         return selectedPlayer ? (
-          <ProfileScreen player={selectedPlayer} players={players} onNavigate={navigateTo} />
+          <ProfileScreen 
+            player={selectedPlayer} 
+            players={players} 
+            onNavigate={navigateTo} 
+            onUpdateAvatar={handleUpdateAvatar}
+          />
         ) : <ArenaScreen onNavigate={navigateTo} />;
       default:
         return <ArenaScreen onNavigate={navigateTo} />;

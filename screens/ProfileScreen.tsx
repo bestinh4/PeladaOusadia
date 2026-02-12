@@ -1,20 +1,54 @@
 
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { Player, Screen } from '../types';
 
 interface ProfileScreenProps {
   player: Player;
   players: Player[];
   onNavigate: (screen: Screen, data?: any) => void;
+  onUpdateAvatar: (id: string, avatarUrl: string) => Promise<void>;
 }
 
-const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, players, onNavigate }) => {
+const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, players, onNavigate, onUpdateAvatar }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
   const similarPlayers = players
     .filter((p) => p.id !== player.id && p.position === player.position)
     .slice(0, 5);
 
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result as string;
+      try {
+        await onUpdateAvatar(player.id, base64String);
+      } finally {
+        setIsUploading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div className="h-full bg-surface-gray overflow-y-auto no-scrollbar pb-32">
+      {/* Hidden File Input */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileChange} 
+        accept="image/*" 
+        className="hidden" 
+      />
+
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-6 bg-white sticky top-0 z-30 shadow-sm border-b border-gray-50">
         <button onClick={() => onNavigate('players')} className="size-10 bg-gray-50 rounded-xl flex items-center justify-center text-navy active:scale-90 transition-transform">
@@ -45,11 +79,24 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, players, onNaviga
               <span className="material-symbols-outlined text-white/60 text-[20px] mt-1">shield</span>
            </div>
 
+           {/* Edit Avatar Button */}
+           <button 
+             onClick={handleAvatarClick}
+             disabled={isUploading}
+             className="absolute top-8 right-8 z-30 size-10 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center text-white/80 hover:bg-white/20 active:scale-90 transition-all border border-white/10 group/edit"
+           >
+              {isUploading ? (
+                <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              ) : (
+                <span className="material-symbols-outlined text-[20px] group-hover/edit:text-primary transition-colors">photo_camera</span>
+              )}
+           </button>
+
            {/* Player Image with advanced masking */}
            <div className="absolute bottom-28 left-1/2 -translate-x-1/2 w-full h-full flex items-end justify-center pointer-events-none z-10">
               <img 
                 src={player.avatar} 
-                className="w-[120%] h-[85%] object-cover object-top mask-image-gradient brightness-[1.1] contrast-[1.05]" 
+                className={`w-[120%] h-[85%] object-cover object-top mask-image-gradient brightness-[1.1] contrast-[1.05] transition-opacity duration-500 ${isUploading ? 'opacity-50' : 'opacity-100'}`} 
               />
            </div>
 

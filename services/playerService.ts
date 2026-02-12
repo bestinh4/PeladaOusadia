@@ -53,6 +53,19 @@ export const playerService = {
     }
   },
 
+  // Atualiza a foto do atleta
+  updateAvatar: async (playerId: string, avatarUrl: string) => {
+    try {
+      const playerRef = doc(db, COLLECTION_NAME, playerId);
+      await updateDoc(playerRef, {
+        avatar: avatarUrl
+      });
+    } catch (error) {
+      console.error("Error updating avatar:", error);
+      throw error;
+    }
+  },
+
   // Seed inicial com verificação de erro
   seedPlayers: async () => {
     try {
