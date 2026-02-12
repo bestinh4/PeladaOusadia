@@ -10,17 +10,9 @@ export interface Player {
   goals: number;
   assists: number;
   matches: number;
+  goalsConceded: number;
   club?: string;
   number?: number;
-  rating: number;
-  stats: {
-    pac: number;
-    sho: number;
-    pas: number;
-    dri: number;
-    def: number;
-    phy: number;
-  };
 }
 
 export interface Match {

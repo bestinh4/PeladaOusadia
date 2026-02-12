@@ -68,10 +68,7 @@ export const playerService = {
       goals: 0,
       assists: 0,
       matches: 0,
-      rating: 60,
-      stats: {
-        pac: 50, sho: 50, pas: 50, dri: 50, def: 50, phy: 50
-      }
+      goalsConceded: 0
     };
     await setDoc(playerRef, newPlayer);
     return newPlayer;
@@ -92,10 +89,7 @@ export const playerService = {
       goals: 0,
       assists: 0,
       matches: 0,
-      rating: 60,
-      stats: {
-        pac: 50, sho: 50, pas: 50, dri: 50, def: 50, phy: 50
-      }
+      goalsConceded: 0
     };
     await setDoc(playerRef, newPlayer);
     return newPlayer;

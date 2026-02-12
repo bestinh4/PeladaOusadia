@@ -14,7 +14,7 @@ const PlayerListScreen: React.FC<PlayerListScreenProps> = ({ players, onToggleCo
   const [tab, setTab] = useState('confirmados');
   const [search, setSearch] = useState('');
   const [posFilter, setPosFilter] = useState('Todos');
-  const [sortBy, setSortBy] = useState<'rating' | 'name'>('rating');
+  const [sortBy, setSortBy] = useState<'name'>('name');
   const [showAddModal, setShowAddModal] = useState(false);
   const [newName, setNewName] = useState('');
   const [newPos, setNewPos] = useState<Player['position']>('Midfielder');
@@ -38,13 +38,10 @@ const PlayerListScreen: React.FC<PlayerListScreenProps> = ({ players, onToggleCo
       list = list.filter(p => p.position === posFilter);
     }
 
-    list.sort((a, b) => {
-      if (sortBy === 'rating') return b.rating - a.rating;
-      return a.name.localeCompare(b.name);
-    });
+    list.sort((a, b) => a.name.localeCompare(b.name));
 
     return list;
-  }, [players, tab, search, posFilter, sortBy]);
+  }, [players, tab, search, posFilter]);
 
   const handleManualCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,14 +124,13 @@ const PlayerListScreen: React.FC<PlayerListScreenProps> = ({ players, onToggleCo
                     {player.role === 'admin' && <span className="text-[7px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-black uppercase">ADM</span>}
                   </div>
                 </div>
-                <div className="text-right shrink-0"><div className="text-lg font-black text-primary italic">{player.rating}</div></div>
+                <div className="shrink-0"><span className="material-symbols-outlined text-slate-200">chevron_right</span></div>
               </div>
             ))
           )}
         </div>
       </div>
 
-      {/* MODAL ADICIONAR ATLETA */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
           <div className="absolute inset-0 bg-secondary/80 backdrop-blur-sm animate-fade-in" onClick={() => setShowAddModal(false)}></div>
