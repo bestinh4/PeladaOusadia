@@ -1,18 +1,32 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Player, Screen } from '../types';
+import { playerService } from '../services/playerService';
 
 interface ProfileScreenProps {
   player: Player;
   players: Player[];
+  currentPlayer: Player | null;
   onNavigate: (screen: Screen, data?: any) => void;
   onUpdateAvatar: (id: string, file: File | string) => Promise<void>;
 }
 
-const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, onNavigate, onUpdateAvatar }) => {
+const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, onNavigate, onUpdateAvatar }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [editData, setEditData] = useState({
+    name: player.name,
+    position: player.position,
+    level: player.level,
+    club: player.club || '',
+    number: player.number || 0
+  });
+
+  const isOwnProfile = currentPlayer?.id === player.id;
 
   const handleAvatarClick = () => {
+    if (!isOwnProfile) return;
     fileInputRef.current?.click();
   };
 
@@ -23,7 +37,18 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, onNavigate, onUpd
     }
   };
 
-  // Convert rating to a 0-5 scale for display
+  const handleSaveProfile = async () => {
+    setLoading(true);
+    try {
+      await playerService.updateProfile(player.id, editData);
+      setIsEditing(false);
+    } catch (err: any) {
+      alert("Erro ao salvar: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const displayRating = (player.rating / 20).toFixed(1);
 
   return (
@@ -33,20 +58,29 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, onNavigate, onUpd
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
         <h2 className="text-lg font-black text-secondary italic uppercase tracking-tighter">Ficha Técnica</h2>
-        <div className="size-10"></div>
+        {isOwnProfile ? (
+          <button 
+            onClick={() => isEditing ? handleSaveProfile() : setIsEditing(true)}
+            className={`size-10 rounded-xl flex items-center justify-center transition-all active:scale-90 ${isEditing ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-50 text-secondary'}`}
+          >
+            <span className="material-symbols-outlined text-[20px]">{isEditing ? 'check' : 'edit'}</span>
+          </button>
+        ) : <div className="size-10"></div>}
       </header>
 
       <div className="flex-1 overflow-y-auto no-scrollbar pb-40">
-        <div className="flex flex-col items-center pt-8 mb-8 bg-white pb-12 rounded-b-[4rem] shadow-sm border-b border-slate-100 relative">
+        <div className="flex flex-col items-center pt-8 mb-8 bg-white pb-12 rounded-b-[4rem] shadow-sm border-b border-slate-100 relative overflow-hidden">
           <div className="absolute inset-0 opacity-[0.03] checkerboard-pattern pointer-events-none rounded-b-[4rem]"></div>
           
-          <div className="relative mb-6 group cursor-pointer" onClick={handleAvatarClick}>
+          <div className={`relative mb-6 group ${isOwnProfile ? 'cursor-pointer' : ''}`} onClick={handleAvatarClick}>
             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
             <div className="size-36 rounded-full border-4 border-slate-100 p-1.5 shadow-xl relative transition-transform group-hover:scale-105 active:scale-95 bg-white">
                <img src={player.avatar} className="size-full rounded-full object-cover relative z-10" />
-               <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20">
-                 <span className="material-symbols-outlined text-white">photo_camera</span>
-               </div>
+               {isOwnProfile && (
+                 <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20">
+                   <span className="material-symbols-outlined text-white">photo_camera</span>
+                 </div>
+               )}
             </div>
             {player.rating > 80 && (
               <div className="absolute bottom-1 right-1 size-10 bg-secondary rounded-full border-4 border-white flex items-center justify-center shadow-lg z-30">
@@ -55,19 +89,53 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, onNavigate, onUpd
             )}
           </div>
           
-          <h1 className="text-3xl font-black text-secondary uppercase italic tracking-tighter mb-1 relative z-10">{player.name}</h1>
-          <div className="flex items-center gap-3 relative z-10">
-            <span className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-primary/20">{player.position}</span>
-            <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Rank: {player.level || 'Atleta'}</span>
-          </div>
+          {isEditing ? (
+            <div className="w-full px-12 space-y-4 relative z-10">
+              <input 
+                value={editData.name}
+                onChange={(e) => setEditData({...editData, name: e.target.value})}
+                className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-center text-lg font-black text-secondary"
+                placeholder="Nome"
+              />
+              <div className="flex gap-2">
+                <select 
+                  value={editData.position}
+                  onChange={(e) => setEditData({...editData, position: e.target.value})}
+                  className="flex-1 h-10 bg-slate-50 border border-slate-100 rounded-xl px-2 text-[10px] font-black uppercase tracking-widest text-secondary"
+                >
+                  <option>Midfielder</option>
+                  <option>Forward</option>
+                  <option>Defender</option>
+                  <option>Goalkeeper</option>
+                </select>
+                <select 
+                  value={editData.level}
+                  onChange={(e) => setEditData({...editData, level: e.target.value})}
+                  className="flex-1 h-10 bg-slate-50 border border-slate-100 rounded-xl px-2 text-[10px] font-black uppercase tracking-widest text-secondary"
+                >
+                  <option>Amador</option>
+                  <option>Semi-Pro</option>
+                  <option>Profissional</option>
+                </select>
+              </div>
+            </div>
+          ) : (
+            <>
+              <h1 className="text-3xl font-black text-secondary uppercase italic tracking-tighter mb-1 relative z-10">{player.name}</h1>
+              <div className="flex items-center gap-3 relative z-10">
+                <span className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-primary/20">{player.position}</span>
+                <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Rank: {player.level}</span>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Real Stats from Database */}
+        {/* Real Stats */}
         <div className="px-6 grid grid-cols-3 gap-4 mb-10 -mt-12 relative z-20">
           {[
-            { val: player.goals || 0, label: 'Gols', color: 'bg-primary shadow-primary/20' },
-            { val: player.assists || 0, label: 'Assists', color: 'bg-secondary shadow-secondary/20' },
-            { val: player.matches || 0, label: 'Partidas', color: 'bg-white border border-slate-100' }
+            { val: player.goals, label: 'Gols', color: 'bg-primary shadow-primary/20' },
+            { val: player.assists, label: 'Assists', color: 'bg-secondary shadow-secondary/20' },
+            { val: player.matches, label: 'Partidas', color: 'bg-white border border-slate-100' }
           ].map(s => (
             <div key={s.label} className={`rounded-[2.5rem] p-6 flex flex-col items-center justify-center shadow-lg ${s.color}`}>
               <span className={`text-3xl font-black mb-1 ${s.color.includes('white') ? 'text-secondary' : 'text-white'}`}>{s.val}</span>

@@ -2,8 +2,9 @@
 import React, { useEffect, useCallback, Suspense, lazy, useReducer } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './lib/firebase';
-import { Screen, Player } from './types';
+import { Screen, Player, Match } from './types';
 import { playerService } from './services/playerService';
+import { matchService } from './services/matchService';
 import BottomNav from './components/BottomNav';
 
 // Lazy load screens
@@ -14,11 +15,13 @@ const ScoutScreen = lazy(() => import('./screens/ScoutScreen'));
 const ProfileScreen = lazy(() => import('./screens/ProfileScreen'));
 const DrawScreen = lazy(() => import('./screens/DrawScreen'));
 const FinanceScreen = lazy(() => import('./screens/FinanceScreen'));
+const CreateMatchScreen = lazy(() => import('./screens/CreateMatchScreen'));
 
 interface AppState {
   user: User | null;
   currentScreen: Screen;
   players: Player[];
+  activeMatch: Match | null;
   selectedPlayer: Player | null;
   loading: boolean;
   error: string | null;
@@ -28,12 +31,14 @@ type AppAction =
   | { type: 'SET_AUTH'; user: User | null }
   | { type: 'NAVIGATE'; screen: Screen; data?: any }
   | { type: 'SET_PLAYERS'; players: Player[] }
+  | { type: 'SET_MATCH'; match: Match | null }
   | { type: 'SET_ERROR'; error: string | null };
 
 const initialState: AppState = {
   user: null,
   currentScreen: 'login',
   players: [],
+  activeMatch: null,
   selectedPlayer: null,
   loading: true,
   error: null,
@@ -59,6 +64,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
     case 'SET_PLAYERS':
       return { ...state, players: action.players };
+    case 'SET_MATCH':
+      return { ...state, activeMatch: action.match };
     case 'SET_ERROR':
       return { ...state, error: action.error, loading: false };
     default:
@@ -75,7 +82,7 @@ const ScreenLoader = () => (
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const { user, currentScreen, players, selectedPlayer, loading, error } = state;
+  const { user, currentScreen, players, activeMatch, selectedPlayer, loading, error } = state;
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
@@ -88,21 +95,31 @@ const App: React.FC = () => {
     if (loading || !user) return;
 
     let unsubscribePlayers: (() => void) | undefined;
+    let unsubscribeMatch: (() => void) | undefined;
     
     const initData = async () => {
       try {
         await playerService.ensurePlayerProfile(user);
+        
         unsubscribePlayers = playerService.subscribeToPlayers(
           (data) => dispatch({ type: 'SET_PLAYERS', players: data }),
           (err) => dispatch({ type: 'SET_ERROR', error: err.message })
         );
+
+        unsubscribeMatch = matchService.subscribeToActiveMatch(
+          (match) => dispatch({ type: 'SET_MATCH', match })
+        );
+
       } catch (err: any) {
         dispatch({ type: 'SET_ERROR', error: err.message });
       }
     };
 
     initData();
-    return () => unsubscribePlayers?.();
+    return () => {
+      unsubscribePlayers?.();
+      unsubscribeMatch?.();
+    };
   }, [user, loading]);
 
   const navigateTo = useCallback((screen: Screen, data?: any) => {
@@ -159,13 +176,28 @@ const App: React.FC = () => {
             onLogin={() => navigateTo('home')} 
           />
         )}
-        {currentScreen === 'home' && <ArenaScreen players={players} currentPlayer={currentPlayer || null} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} />}
+        {currentScreen === 'home' && (
+          <ArenaScreen 
+            players={players} 
+            activeMatch={activeMatch}
+            currentPlayer={currentPlayer || null} 
+            onToggleConfirm={toggleConfirm} 
+            onNavigate={navigateTo} 
+          />
+        )}
         {currentScreen === 'players' && <PlayerListScreen players={players} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} />}
         {currentScreen === 'scout' && <ScoutScreen players={players} onNavigate={navigateTo} />}
         {currentScreen === 'draw' && <DrawScreen players={players} onNavigate={navigateTo} />}
         {currentScreen === 'finance' && <FinanceScreen players={players} onNavigate={navigateTo} />}
+        {currentScreen === 'create-match' && <CreateMatchScreen onNavigate={navigateTo} />}
         {currentScreen === 'profile' && selectedPlayer && (
-          <ProfileScreen player={selectedPlayer} players={players} onNavigate={navigateTo} onUpdateAvatar={handleUpdateAvatar} />
+          <ProfileScreen 
+            player={selectedPlayer} 
+            players={players} 
+            currentPlayer={currentPlayer || null}
+            onNavigate={navigateTo} 
+            onUpdateAvatar={handleUpdateAvatar} 
+          />
         )}
       </Suspense>
     );

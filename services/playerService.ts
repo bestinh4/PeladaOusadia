@@ -9,6 +9,7 @@ import {
   setDoc,
   getDoc,
   getDocs,
+  limit,
   FirestoreError
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -47,6 +48,11 @@ export const playerService = {
       const snap = await getDoc(playerRef);
       
       if (!snap.exists()) {
+        // Check if this is the very first player to make them admin
+        const q = query(collection(db, COLLECTION_NAME), limit(1));
+        const firstSnap = await getDocs(q);
+        const isFirst = firstSnap.empty;
+
         const newPlayer: Player = {
           id: user.uid,
           name: user.displayName || 'Novo Atleta',
@@ -55,7 +61,10 @@ export const playerService = {
           avatar: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
           confirmed: false,
           paid: false,
+          role: isFirst ? 'admin' : 'player',
           goals: 0,
+          assists: 0,
+          matches: 0,
           rating: 60,
           stats: {
             pac: 50, sho: 50, pas: 50, dri: 50, def: 50, phy: 50
@@ -67,6 +76,11 @@ export const playerService = {
       console.error("Erro ao garantir perfil:", error);
       throw error;
     }
+  },
+
+  updateProfile: async (playerId: string, data: Partial<Player>) => {
+    const playerRef = doc(db, COLLECTION_NAME, playerId);
+    await updateDoc(playerRef, data);
   },
 
   togglePresence: async (playerId: string, currentStatus: boolean) => {
@@ -88,10 +102,5 @@ export const playerService = {
   updateAvatar: async (playerId: string, avatarUrl: string) => {
     const playerRef = doc(db, COLLECTION_NAME, playerId);
     await updateDoc(playerRef, { avatar: avatarUrl });
-  },
-
-  seedPlayers: async () => {
-    // Disabled for production use.
-    return;
   }
 };
