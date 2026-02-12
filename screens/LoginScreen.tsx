@@ -5,17 +5,11 @@ import { auth, googleProvider } from "../lib/firebase";
 
 interface LoginScreenProps {
   onLogin: () => void;
-  onDemoMode: () => void;
 }
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onDemoMode }) => {
+const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState<{ code: string; message: string; domain?: string } | null>(null);
-  const [currentHostname, setCurrentHostname] = useState('');
-
-  useEffect(() => {
-    setCurrentHostname(window.location.hostname);
-  }, []);
 
   const handleGoogleLogin = async () => {
     setIsAuthenticating(true);
@@ -82,7 +76,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onDemoMode }) => {
               Copiar Domínio para o Firebase
             </button>
             <p className="text-[8px] text-amber-500 mt-4 text-center italic">
-              Authentication > Configurações > Domínios Autorizados
+              Authentication &gt; Configurações &gt; Domínios Autorizados
             </p>
           </div>
         ) : (

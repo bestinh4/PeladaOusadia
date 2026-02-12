@@ -22,15 +22,13 @@ interface AppState {
   selectedPlayer: Player | null;
   loading: boolean;
   error: string | null;
-  isDemoMode: boolean;
 }
 
 type AppAction =
   | { type: 'SET_AUTH'; user: User | null }
   | { type: 'NAVIGATE'; screen: Screen; data?: any }
   | { type: 'SET_PLAYERS'; players: Player[] }
-  | { type: 'SET_ERROR'; error: string | null }
-  | { type: 'SET_DEMO_MODE'; enabled: boolean };
+  | { type: 'SET_ERROR'; error: string | null };
 
 const initialState: AppState = {
   user: null,
@@ -39,7 +37,6 @@ const initialState: AppState = {
   selectedPlayer: null,
   loading: true,
   error: null,
-  isDemoMode: false,
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -56,14 +53,14 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         currentScreen: action.screen,
-        selectedPlayer: action.screen === 'profile' ? (action.data || currentUserInList || state.players[0] || null) : state.selectedPlayer,
+        selectedPlayer: action.screen === 'profile' 
+          ? (action.data || currentUserInList || state.players[0] || null) 
+          : state.selectedPlayer,
       };
     case 'SET_PLAYERS':
       return { ...state, players: action.players };
     case 'SET_ERROR':
       return { ...state, error: action.error, loading: false };
-    case 'SET_DEMO_MODE':
-      return { ...state, isDemoMode: action.enabled, currentScreen: action.enabled ? 'home' : 'login' };
     default:
       return state;
   }
@@ -78,7 +75,7 @@ const ScreenLoader = () => (
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const { user, currentScreen, players, selectedPlayer, loading, error, isDemoMode } = state;
+  const { user, currentScreen, players, selectedPlayer, loading, error } = state;
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
@@ -88,7 +85,7 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (loading || !user || isDemoMode) return;
+    if (loading || !user) return;
 
     let unsubscribePlayers: (() => void) | undefined;
     
@@ -106,7 +103,7 @@ const App: React.FC = () => {
 
     initData();
     return () => unsubscribePlayers?.();
-  }, [user, isDemoMode, loading]);
+  }, [user, loading]);
 
   const navigateTo = useCallback((screen: Screen, data?: any) => {
     dispatch({ type: 'NAVIGATE', screen, data });
@@ -160,7 +157,6 @@ const App: React.FC = () => {
         {currentScreen === 'login' && (
           <LoginScreen 
             onLogin={() => navigateTo('home')} 
-            onDemoMode={() => dispatch({ type: 'SET_DEMO_MODE', enabled: true })} 
           />
         )}
         {currentScreen === 'home' && <ArenaScreen players={players} currentPlayer={currentPlayer || null} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} />}
@@ -180,7 +176,7 @@ const App: React.FC = () => {
       <div className="w-full max-w-[430px] h-full sm:h-[932px] sm:max-h-[95vh] bg-background shadow-2xl relative flex flex-col overflow-hidden sm:rounded-[48px] border-4 border-white">
         
         {user && currentScreen !== 'login' && (
-          <button onClick={handleLogout} className="absolute top-6 right-6 z-[60] size-10 bg-white shadow-md rounded-xl flex items-center justify-center text-slate-400">
+          <button onClick={handleLogout} className="absolute top-6 right-6 z-[60] size-10 bg-white shadow-md rounded-xl flex items-center justify-center text-slate-400 hover:text-primary transition-all active:scale-95">
             <span className="material-symbols-outlined text-[20px]">logout</span>
           </button>
         )}
