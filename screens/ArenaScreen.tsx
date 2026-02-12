@@ -14,21 +14,35 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
   const confirmedCount = players.filter(p => p.confirmed).length;
   const isConfirmed = currentPlayer?.confirmed || false;
   
-  // Se o usuário é admin OU se não existe nenhuma partida ativa, permitimos criar uma
   const isAdmin = currentPlayer?.role === 'admin' || !activeMatch;
   
   const GAME_FEE = activeMatch?.price || 0;
   const userBalance = currentPlayer?.paid ? 0 : (isConfirmed ? GAME_FEE : 0);
 
+  const handleInvite = () => {
+    if (!activeMatch) return;
+    const text = `*⚽ CONVOCAÇÃO VATRENI MANAGER*\n\nEstamos recrutando para a próxima partida!\n\n📍 *Local:* ${activeMatch.location}\n📅 *Data:* ${activeMatch.date}\n⏰ *Hora:* ${activeMatch.time}\n💰 *Valor:* R$ ${activeMatch.price},00\n\n_Confirme sua presença pelo app!_`;
+    navigator.clipboard.writeText(text);
+    alert("Convite copiado! Cole agora no grupo do WhatsApp para convocar o pessoal. 🚀");
+  };
+
   return (
     <div className="h-full bg-slate-50 overflow-y-auto no-scrollbar pb-36 px-6">
-      {/* Dynamic Header */}
       <header className="flex items-center justify-between pt-10 pb-6 sticky top-0 z-40 bg-slate-50/80 backdrop-blur-xl -mx-6 px-6">
         <div>
           <h1 className="text-2xl font-black text-secondary italic tracking-tighter leading-none">VATRENI</h1>
           <p className="text-[9px] font-black text-primary uppercase tracking-[0.4em] mt-1.5">Elite Manager</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {activeMatch && (
+             <button 
+                onClick={handleInvite}
+                className="size-11 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 active:scale-90 transition-all shadow-sm"
+                title="Convidar Galera"
+              >
+                <span className="material-symbols-outlined text-[24px]">share</span>
+              </button>
+          )}
           {isAdmin && (
             <button 
               onClick={() => onNavigate('create-match')}
@@ -50,9 +64,7 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
         </div>
       </header>
 
-      {/* Main Content Area */}
       <div className="space-y-8 mt-4">
-        {/* Match Hub Section */}
         <section className="animate-slide-up">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Próximo Confronto</h2>
@@ -128,7 +140,6 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
           )}
         </section>
 
-        {/* Tactical Action Button */}
         {activeMatch && (
           <div className="animate-slide-up delay-100">
             {!isConfirmed ? (
@@ -152,7 +163,6 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
           </div>
         )}
 
-        {/* Personal Stats & Status */}
         <section className="animate-slide-up delay-200">
           <div 
             onClick={() => onNavigate('profile')}
@@ -187,7 +197,6 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({ players, activeMatch, current
           </div>
         </section>
 
-        {/* Global Stats Grid */}
         <div className="grid grid-cols-2 gap-5 animate-slide-up delay-300 pb-12">
           <div 
             onClick={() => onNavigate('players')}

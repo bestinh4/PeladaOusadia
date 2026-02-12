@@ -20,10 +20,10 @@ const PLAYERS_COL = "players";
 
 export const matchService = {
   subscribeToActiveMatch: (callback: (match: Match | null) => void) => {
+    // Consulta simplificada para evitar erros de índice composto em projetos novos
     const q = query(
       collection(db, MATCHES_COL), 
       where("active", "==", true),
-      orderBy("createdAt", "desc"), 
       limit(1)
     );
     
@@ -38,7 +38,6 @@ export const matchService = {
   },
 
   createMatch: async (matchData: Omit<Match, 'id' | 'active' | 'createdAt'>) => {
-    // 1. Deactivate old matches
     const q = query(collection(db, MATCHES_COL), where("active", "==", true));
     const activeMatches = await getDocs(q);
     const batch = writeBatch(db);
@@ -47,7 +46,6 @@ export const matchService = {
       batch.update(doc(db, MATCHES_COL, m.id), { active: false });
     });
 
-    // 2. Reset player confirmations and payment for the new match cycle
     const playersQ = await getDocs(collection(db, PLAYERS_COL));
     playersQ.forEach((p) => {
       batch.update(doc(db, PLAYERS_COL, p.id), { 
@@ -56,7 +54,6 @@ export const matchService = {
       });
     });
 
-    // 3. Create new match
     const newMatchRef = doc(collection(db, MATCHES_COL));
     batch.set(newMatchRef, {
       ...matchData,

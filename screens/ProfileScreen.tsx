@@ -9,9 +9,10 @@ interface ProfileScreenProps {
   currentPlayer: Player | null;
   onNavigate: (screen: Screen, data?: any) => void;
   onUpdateAvatar: (id: string, file: File | string) => Promise<void>;
+  onLogout: () => void;
 }
 
-const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, onNavigate, onUpdateAvatar }) => {
+const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, onNavigate, onUpdateAvatar, onLogout }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -62,8 +63,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
 
   return (
     <div className="h-full bg-background flex flex-col relative overflow-hidden">
-      {/* Dynamic Header */}
-      <header className="flex items-center justify-between px-6 py-6 sticky top-0 z-40 glass-header border-b border-slate-100">
+      <header className="flex items-center justify-between px-6 py-6 sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-100">
         <button 
           onClick={() => onNavigate('home')} 
           className="size-10 bg-slate-50 text-secondary rounded-xl flex items-center justify-center active:scale-90 transition-all border border-slate-100"
@@ -74,25 +74,34 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
           <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-0.5 leading-none">Vatreni</h2>
           <p className="text-sm font-black text-secondary italic uppercase tracking-tighter">Pro Identity</p>
         </div>
-        {(isOwnProfile || isAdmin) ? (
-          <button 
-            onClick={() => isEditing ? handleSaveProfile() : setIsEditing(true)}
-            disabled={loading}
-            className={`size-10 rounded-xl flex items-center justify-center transition-all active:scale-90 shadow-sm ${
-              isEditing ? 'bg-primary text-white' : 'bg-white border border-slate-100 text-secondary'
-            }`}
-          >
-            {loading ? (
-              <div className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              <span className="material-symbols-outlined text-[20px]">{isEditing ? 'done' : 'settings'}</span>
-            )}
-          </button>
-        ) : <div className="size-10"></div>}
+        <div className="flex items-center gap-2">
+          {isOwnProfile && (
+             <button 
+                onClick={onLogout}
+                className="size-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center active:scale-90 transition-all border border-slate-100"
+              >
+                <span className="material-symbols-outlined text-[20px]">logout</span>
+              </button>
+          )}
+          {(isOwnProfile || isAdmin) ? (
+            <button 
+              onClick={() => isEditing ? handleSaveProfile() : setIsEditing(true)}
+              disabled={loading}
+              className={`size-10 rounded-xl flex items-center justify-center transition-all active:scale-90 shadow-sm ${
+                isEditing ? 'bg-primary text-white' : 'bg-white border border-slate-100 text-secondary'
+              }`}
+            >
+              {loading ? (
+                <div className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <span className="material-symbols-outlined text-[20px]">{isEditing ? 'done' : 'settings'}</span>
+              )}
+            </button>
+          ) : <div className="size-10"></div>}
+        </div>
       </header>
 
       <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
-        {/* Profile Card Section */}
         <div className="relative pt-12 pb-20 px-6 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-secondary/5 to-transparent pointer-events-none"></div>
           <div className="absolute top-0 right-0 size-64 opacity-[0.03] checkerboard-pattern -rotate-12 pointer-events-none"></div>
@@ -145,7 +154,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
           </div>
         </div>
 
-        {/* Tactical Summary Cards */}
         <div className="px-6 grid grid-cols-3 gap-4 mb-12 -mt-10 relative z-20">
           {[
             { val: player.goals, label: 'Gols', color: 'bg-primary text-white shadow-primary/20' },
@@ -163,7 +171,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
           ))}
         </div>
 
-        {/* Technical Attributes Grid */}
         <div className="px-6 space-y-8 animate-slide-up delay-300">
           <div className="flex items-center justify-between px-2">
             <h3 className="text-lg font-black text-secondary italic uppercase">Technical Core</h3>
@@ -206,12 +213,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
                 </div>
               );
             })}
-          </div>
-          
-          <div className="text-center pb-10">
-             <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest leading-relaxed px-12 italic">
-               Technical attributes contribute to the overall player OVR calculated by our pro-scouting algorithm.
-             </p>
           </div>
         </div>
       </div>

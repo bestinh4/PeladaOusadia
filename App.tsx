@@ -149,7 +149,7 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogout = useCallback(async () => {
-    if(window.confirm("Deseja realmente sair?")) {
+    if(window.confirm("Deseja realmente sair da sua conta?")) {
       await auth.signOut();
       dispatch({ type: 'NAVIGATE', screen: 'login' });
     }
@@ -199,6 +199,7 @@ const App: React.FC = () => {
             currentPlayer={currentPlayer || null}
             onNavigate={navigateTo} 
             onUpdateAvatar={handleUpdateAvatar} 
+            onLogout={handleLogout}
           />
         )}
       </Suspense>
@@ -207,24 +208,13 @@ const App: React.FC = () => {
 
   return (
     <div className="flex justify-center min-h-screen bg-slate-100 lg:py-6 overflow-hidden">
-      {/* Container Adaptável: Ocupa largura total no mobile e max-w-md no desktop */}
       <div className="w-full max-w-none md:max-w-[430px] h-screen md:h-[932px] md:max-h-[95vh] bg-background shadow-2xl relative flex flex-col overflow-hidden md:rounded-[48px] border-none md:border-4 md:border-white transition-all">
         
-        {user && currentScreen !== 'login' && (
-          <button 
-            onClick={handleLogout} 
-            className="absolute top-4 right-4 sm:top-6 sm:right-6 z-[60] size-10 bg-white/90 backdrop-blur-md shadow-lg border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary transition-all active:scale-90"
-            title="Sair"
-          >
-            <span className="material-symbols-outlined text-[20px]">logout</span>
-          </button>
-        )}
-
         <div className="flex-1 overflow-hidden relative">
           {renderScreen()}
         </div>
 
-        {currentScreen !== 'login' && (
+        {user && currentScreen !== 'login' && (
           <div className="shrink-0 z-50">
             <BottomNav activeScreen={currentScreen} onNavigate={navigateTo} />
           </div>
