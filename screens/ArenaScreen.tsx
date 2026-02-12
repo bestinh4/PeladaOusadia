@@ -23,13 +23,19 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   
-  const confirmedCount = players.filter(p => p.confirmed).length;
+  const confirmedPlayers = players.filter(p => p.confirmed);
+  const confirmedGKs = confirmedPlayers.filter(p => p.position === 'Goalkeeper').length;
+  const confirmedField = confirmedPlayers.filter(p => p.position !== 'Goalkeeper').length;
+  
   const isConfirmed = currentPlayer?.confirmed || false;
   const isAdmin = currentPlayer?.role === 'admin';
   
   const GAME_FEE = activeMatch?.price || 0;
   const userBalance = currentPlayer?.paid ? 0 : (isConfirmed ? GAME_FEE : 0);
   const CROATIA_LOGO = "https://upload.wikimedia.org/wikipedia/pt/c/cf/Croatia_football_federation.png";
+
+  const GK_LIMIT = 5;
+  const FIELD_LIMIT = activeMatch ? activeMatch.limit - GK_LIMIT : 0;
 
   const handleFeaturedImageClick = () => {
     if (isAdmin && !isUploading) {
@@ -43,8 +49,8 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({
       setIsUploading(true);
       try {
         await matchService.updateFeaturedImage(file);
-      } catch (err) {
-        alert("Erro ao atualizar capa.");
+      } catch (err: any) {
+        alert("Erro no upload: " + err.message);
       } finally {
         setIsUploading(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
@@ -89,7 +95,7 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({
 
       <div className="mt-4 space-y-6">
         
-        {/* CAPA DA SEMANA: EQUIPE VENCEDORA */}
+        {/* CAPA DA SEMANA */}
         <section className="animate-fade-in">
           <div className="flex items-center justify-between mb-3 px-1">
             <h2 className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Capa da Semana</h2>
@@ -119,7 +125,6 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({
               </div>
             )}
 
-            {/* Admin Upload Trigger */}
             {isAdmin && (
               <div className="absolute top-4 right-4 z-20">
                 <div className="size-10 bg-white/20 backdrop-blur-xl border border-white/30 rounded-full flex items-center justify-center text-white shadow-lg">
@@ -132,7 +137,6 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({
               </div>
             )}
 
-            {/* Text Overlay */}
             {featuredImageUrl && (
               <div className="absolute bottom-8 left-8 right-8 z-10">
                 <h3 className="text-3xl font-black italic tracking-tighter text-white uppercase leading-none mb-1">Elite Team <span className="text-primary">O&A</span></h3>
@@ -157,7 +161,7 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({
           {activeMatch ? (
             <div className="stadium-overlay rounded-[2.5rem] p-6 text-white relative overflow-hidden shadow-2xl animate-scale-in">
               <div className="relative z-10">
-                <div className="flex justify-between items-start mb-12">
+                <div className="flex justify-between items-start mb-8">
                   <div className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-lg text-[8px] font-bold uppercase tracking-widest border border-white/10">
                     {activeMatch.type} (7x7)
                   </div>
@@ -167,31 +171,46 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({
                   </div>
                 </div>
 
-                <div className="text-center mb-10">
+                <div className="text-center mb-8">
                   <h3 className="text-6xl font-black italic tracking-tighter leading-none mb-1">{activeMatch.time}</h3>
                   <p className="text-[10px] font-bold text-white/70 tracking-[0.3em] uppercase">{activeMatch.date}</p>
                 </div>
 
-                <div className="bg-secondary/40 backdrop-blur-md rounded-2xl p-4 flex items-center gap-3 border border-white/10 mb-8 max-w-[90%]">
+                {/* VAGAS SEGMENTADAS */}
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                  <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[8px] font-black uppercase tracking-widest text-white/60">Goleiros</span>
+                      <span className="text-[10px] font-black">{confirmedGKs} / {GK_LIMIT}</span>
+                    </div>
+                    <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary transition-all duration-700" 
+                        style={{ width: `${(confirmedGKs / GK_LIMIT) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[8px] font-black uppercase tracking-widest text-white/60">Linha</span>
+                      <span className="text-[10px] font-black">{confirmedField} / {FIELD_LIMIT}</span>
+                    </div>
+                    <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-success transition-all duration-700" 
+                        style={{ width: `${(confirmedField / FIELD_LIMIT) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-secondary/40 backdrop-blur-md rounded-2xl p-4 flex items-center gap-3 border border-white/10">
                   <div className="size-8 bg-primary rounded-lg flex items-center justify-center shadow-lg">
                     <span className="material-symbols-outlined text-white text-[18px]">location_on</span>
                   </div>
                   <div className="min-w-0">
                     <p className="text-[8px] font-black text-white/50 uppercase tracking-widest leading-none mb-1">Localização</p>
                     <p className="text-[11px] font-black truncate">{activeMatch.location}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
-                    <span className="opacity-60">Confirmados</span>
-                    <span>{confirmedCount} / {activeMatch.limit}</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-white rounded-full transition-all duration-1000 ease-out" 
-                      style={{ width: `${(confirmedCount/activeMatch.limit)*100}%` }}
-                    ></div>
                   </div>
                 </div>
               </div>
@@ -252,9 +271,9 @@ const ArenaScreen: React.FC<ArenaScreenProps> = ({
             </div>
             <div>
               <p className="text-3xl font-black text-secondary italic leading-none">
-                {activeMatch ? Math.max(activeMatch.limit - confirmedCount, 0) : '0'}
+                {activeMatch ? Math.max((GK_LIMIT - confirmedGKs) + (FIELD_LIMIT - confirmedField), 0) : '0'}
               </p>
-              <p className="text-[8px] font-black text-slate-300 uppercase tracking-[0.1em] mt-1">Vagas Livres</p>
+              <p className="text-[8px] font-black text-slate-300 uppercase tracking-[0.1em] mt-1">Total Vagas Livres</p>
             </div>
           </div>
           <div onClick={() => onNavigate('scout')} className="bg-white rounded-[1.8rem] p-6 space-y-4 border border-slate-50 shadow-sm active:scale-95 transition-all cursor-pointer">

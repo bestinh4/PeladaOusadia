@@ -134,10 +134,38 @@ const App: React.FC = () => {
 
   const toggleConfirm = useCallback(async (id: string) => {
     const player = players.find(p => p.id === id);
-    if (player) {
-      try { await playerService.togglePresence(id, player.confirmed); } catch (err: any) { alert("Erro ao confirmar presença."); }
+    if (!player || !activeMatch) return;
+
+    const isConfirmed = player.confirmed;
+    
+    // Se estiver tentando confirmar (atualmente não confirmado)
+    if (!isConfirmed) {
+      const GK_LIMIT = 5;
+      const FIELD_LIMIT = activeMatch.limit - GK_LIMIT;
+
+      const confirmedPlayers = players.filter(p => p.confirmed);
+      const confirmedGKs = confirmedPlayers.filter(p => p.position === 'Goalkeeper').length;
+      const confirmedField = confirmedPlayers.filter(p => p.position !== 'Goalkeeper').length;
+
+      if (player.position === 'Goalkeeper') {
+        if (confirmedGKs >= GK_LIMIT) {
+          alert("Vagas para Goleiros esgotadas (Limite: 5).");
+          return;
+        }
+      } else {
+        if (confirmedField >= FIELD_LIMIT) {
+          alert(`Vagas para Jogadores de Linha esgotadas (Limite: ${FIELD_LIMIT}).`);
+          return;
+        }
+      }
     }
-  }, [players]);
+
+    try { 
+      await playerService.togglePresence(id, isConfirmed); 
+    } catch (err: any) { 
+      alert("Erro ao alterar presença."); 
+    }
+  }, [players, activeMatch]);
 
   const handleUpdateAvatar = useCallback(async (id: string, file: File | string) => {
     try {
@@ -181,7 +209,7 @@ const App: React.FC = () => {
             onNavigate={navigateTo} 
           />
         )}
-        {currentScreen === 'players' && <PlayerListScreen players={players} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} currentPlayer={currentPlayer} />}
+        {currentScreen === 'players' && <PlayerListScreen players={players} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} currentPlayer={currentPlayer} activeMatch={activeMatch} />}
         {currentScreen === 'scout' && <ScoutScreen players={players} onNavigate={navigateTo} />}
         {currentScreen === 'draw' && <DrawScreen players={players} onNavigate={navigateTo} />}
         {currentScreen === 'finance' && <FinanceScreen players={players} currentPlayer={currentPlayer || null} onNavigate={navigateTo} />}

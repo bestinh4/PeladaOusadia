@@ -5,13 +5,11 @@ import {
   doc, 
   query, 
   limit, 
-  addDoc, 
   serverTimestamp, 
   writeBatch, 
   getDocs,
   where,
-  setDoc,
-  getDoc
+  setDoc
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../lib/firebase";
@@ -33,16 +31,16 @@ export const matchService = {
       if (snapshot.empty) {
         callback(null);
       } else {
-        const doc = snapshot.docs[0];
-        callback({ id: doc.id, ...doc.data() } as Match);
+        const docSnap = snapshot.docs[0];
+        callback({ id: docSnap.id, ...docSnap.data() } as Match);
       }
     });
   },
 
   subscribeToFeaturedImage: (callback: (url: string | null) => void) => {
-    return onSnapshot(doc(db, CONFIG_COL, "featured_team"), (doc) => {
-      if (doc.exists()) {
-        callback(doc.data().url);
+    return onSnapshot(doc(db, CONFIG_COL, "featured_team"), (docSnap) => {
+      if (docSnap.exists()) {
+        callback(docSnap.data().url);
       } else {
         callback(null);
       }
@@ -50,11 +48,20 @@ export const matchService = {
   },
 
   updateFeaturedImage: async (file: File) => {
-    const storageRef = ref(storage, `featured/team_of_the_week_${Date.now()}`);
-    const snapshot = await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(snapshot.ref);
-    await setDoc(doc(db, CONFIG_COL, "featured_team"), { url, updatedAt: serverTimestamp() });
-    return url;
+    try {
+      const fileName = `featured/team_of_the_week_${Date.now()}`;
+      const storageRef = ref(storage, fileName);
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+      await setDoc(doc(db, CONFIG_COL, "featured_team"), { 
+        url, 
+        updatedAt: serverTimestamp() 
+      });
+      return url;
+    } catch (error: any) {
+      console.error("Erro no upload da capa:", error);
+      throw new Error(error.message || "Falha ao enviar imagem de destaque.");
+    }
   },
 
   createMatch: async (matchData: Omit<Match, 'id' | 'active' | 'createdAt'>) => {

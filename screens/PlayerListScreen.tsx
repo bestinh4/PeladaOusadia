@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Player, Screen } from '../types';
+import { Player, Screen, Match } from '../types';
 import { playerService } from '../services/playerService';
 
 interface PlayerListScreenProps {
@@ -8,13 +8,13 @@ interface PlayerListScreenProps {
   onToggleConfirm: (id: string) => void;
   onNavigate: (screen: Screen, data?: any) => void;
   currentPlayer?: Player | null;
+  activeMatch: Match | null;
 }
 
-const PlayerListScreen: React.FC<PlayerListScreenProps> = ({ players, onToggleConfirm, onNavigate, currentPlayer }) => {
+const PlayerListScreen: React.FC<PlayerListScreenProps> = ({ players, onToggleConfirm, onNavigate, currentPlayer, activeMatch }) => {
   const [tab, setTab] = useState('confirmados');
   const [search, setSearch] = useState('');
   const [posFilter, setPosFilter] = useState('Todos');
-  const [sortBy, setSortBy] = useState<'name'>('name');
   const [showAddModal, setShowAddModal] = useState(false);
   const [newName, setNewName] = useState('');
   const [newPos, setNewPos] = useState<Player['position']>('Midfielder');
@@ -22,6 +22,12 @@ const PlayerListScreen: React.FC<PlayerListScreenProps> = ({ players, onToggleCo
 
   const isAdmin = currentPlayer?.role === 'admin';
   const positions = ['Todos', 'Goalkeeper', 'Defender', 'Midfielder', 'Forward'];
+
+  const GK_LIMIT = 5;
+  const FIELD_LIMIT = activeMatch ? activeMatch.limit - GK_LIMIT : 0;
+
+  const confirmedGKs = players.filter(p => p.confirmed && p.position === 'Goalkeeper').length;
+  const confirmedField = players.filter(p => p.confirmed && p.position !== 'Goalkeeper').length;
 
   const filteredPlayers = useMemo(() => {
     let list = players.filter(p => {
@@ -78,7 +84,14 @@ const PlayerListScreen: React.FC<PlayerListScreenProps> = ({ players, onToggleCo
       <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
         <div className="px-6 mt-8 mb-6 animate-slide-up">
           <h1 className="text-3xl font-black text-secondary mb-1 italic tracking-tighter uppercase">O<span className="text-primary">&</span>A Squad</h1>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{players.length} Atletas Inscritos</p>
+          <div className="flex gap-4">
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+              Goleiros: <span className="text-primary">{confirmedGKs}/{GK_LIMIT}</span>
+            </p>
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+              Linha: <span className="text-success">{confirmedField}/{FIELD_LIMIT}</span>
+            </p>
+          </div>
         </div>
 
         <div className="px-6 mb-6">

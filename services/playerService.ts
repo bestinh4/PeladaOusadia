@@ -120,9 +120,15 @@ export const playerService = {
   },
 
   uploadAvatarToStorage: async (playerId: string, file: File): Promise<string> => {
-    const storageRef = ref(storage, `avatars/${playerId}_${Date.now()}`);
-    const snapshot = await uploadBytes(storageRef, file);
-    return await getDownloadURL(snapshot.ref);
+    try {
+      const storageRef = ref(storage, `avatars/${playerId}_${Date.now()}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+      return url;
+    } catch (error: any) {
+      console.error("Erro no upload do avatar:", error);
+      throw new Error(error.message || "Erro desconhecido ao enviar foto.");
+    }
   },
 
   updateAvatar: async (playerId: string, avatarUrl: string) => {
