@@ -5,12 +5,13 @@ import {
   doc, 
   updateDoc, 
   query, 
-  orderBy,
-  setDoc,
-  getDoc,
-  getDocs,
-  limit,
-  FirestoreError
+  orderBy, 
+  setDoc, 
+  getDoc, 
+  getDocs, 
+  limit, 
+  deleteDoc,
+  FirestoreError 
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../lib/firebase";
@@ -52,7 +53,6 @@ export const playerService = {
     const playerRef = doc(db, COLLECTION_NAME, user.uid);
     const isAdminEmail = user.email === ADMIN_EMAIL;
     
-    // Verifica se é o primeiro usuário para ser admin
     const q = query(collection(db, COLLECTION_NAME), limit(1));
     const firstSnap = await getDocs(q);
     const isFirst = firstSnap.empty;
@@ -77,18 +77,42 @@ export const playerService = {
     return newPlayer;
   },
 
-  ensurePlayerProfile: async (user: User) => {
-    const isAdminEmail = user.email === ADMIN_EMAIL;
-    const profile = await playerService.getPlayerProfile(user.uid);
+  createManualPlayer: async (name: string, position: Player['position']) => {
+    const manualId = `manual_${Date.now()}`;
+    const playerRef = doc(db, COLLECTION_NAME, manualId);
     
-    if (profile && isAdminEmail && profile.role !== 'admin') {
-      await updateDoc(doc(db, COLLECTION_NAME, user.uid), { role: 'admin' });
-    }
+    const newPlayer: Player = {
+      id: manualId,
+      name: name,
+      position: position,
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${manualId}`,
+      confirmed: false,
+      paid: false,
+      role: 'player',
+      goals: 0,
+      assists: 0,
+      matches: 0,
+      rating: 60,
+      stats: {
+        pac: 50, sho: 50, pas: 50, dri: 50, def: 50, phy: 50
+      }
+    };
+    await setDoc(playerRef, newPlayer);
+    return newPlayer;
   },
 
   updateProfile: async (playerId: string, data: Partial<Player>) => {
     const playerRef = doc(db, COLLECTION_NAME, playerId);
     await updateDoc(playerRef, data);
+  },
+
+  setPlayerRole: async (playerId: string, role: 'admin' | 'player') => {
+    const playerRef = doc(db, COLLECTION_NAME, playerId);
+    await updateDoc(playerRef, { role });
+  },
+
+  deletePlayer: async (playerId: string) => {
+    await deleteDoc(doc(db, COLLECTION_NAME, playerId));
   },
 
   togglePresence: async (playerId: string, currentStatus: boolean) => {

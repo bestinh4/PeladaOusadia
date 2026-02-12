@@ -25,7 +25,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
     stats: { ...player.stats }
   });
 
-  // Atualiza dados de edição quando o jogador muda
   useEffect(() => {
     setEditData({
       name: player.name,
@@ -36,11 +35,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
     });
   }, [player.id]);
 
-  // Monitora a troca da URL da imagem para mostrar o estado de "Sincronizando"
   useEffect(() => {
     if (player.avatar) {
       setIsImageSyncing(true);
-      // Timeout de segurança: Se a imagem não carregar em 8s, libera a UI
       const timer = setTimeout(() => setIsImageSyncing(false), 8000);
       return () => clearTimeout(timer);
     }
@@ -62,7 +59,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
         await onUpdateAvatar(player.id, file);
       } catch (err) {
         console.error("Erro no upload:", err);
-        alert("Erro ao enviar imagem. Verifique sua conexão.");
+        alert("Erro ao enviar imagem.");
       } finally {
         setIsUploading(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
@@ -78,38 +75,50 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
       await playerService.updateProfile(player.id, { ...editData, rating: overall });
       setIsEditing(false);
     } catch (err: any) {
-      alert("Erro ao salvar perfil: " + err.message);
+      alert("Erro ao salvar perfil.");
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleImageLoad = () => {
-    setIsImageSyncing(false);
+  const handleToggleAdmin = async () => {
+    const newRole = player.role === 'admin' ? 'player' : 'admin';
+    const confirmMsg = player.role === 'admin' 
+      ? `Remover privilégios de Admin de ${player.name}?` 
+      : `Tornar ${player.name} um Administrador?`;
+    
+    if (window.confirm(confirmMsg)) {
+      try {
+        await playerService.setPlayerRole(player.id, newRole);
+      } catch (err) {
+        alert("Erro ao alterar cargo.");
+      }
+    }
   };
 
-  const handleImageError = () => {
-    setIsImageSyncing(false);
+  const handleDeletePlayer = async () => {
+    if (window.confirm(`AVISO CRÍTICO: Excluir ${player.name} definitivamente do elenco? Esta ação não pode ser desfeita.`)) {
+      try {
+        await playerService.deletePlayer(player.id);
+        onNavigate('players');
+      } catch (err) {
+        alert("Erro ao excluir atleta.");
+      }
+    }
   };
+
+  const handleImageLoad = () => setIsImageSyncing(false);
+  const handleImageError = () => setIsImageSyncing(false);
 
   const showSpinner = isUploading || isImageSyncing;
   const displayRating = (player.rating / 20).toFixed(1);
 
   return (
     <div className="h-full bg-background flex flex-col relative overflow-hidden">
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        onChange={handleFileChange} 
-        className="hidden" 
-        accept="image/*" 
-      />
+      <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
 
       <header className="flex items-center justify-between px-6 py-6 sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-100">
-        <button 
-          onClick={() => onNavigate('home')} 
-          className="size-10 bg-slate-50 text-secondary rounded-xl flex items-center justify-center active:scale-90 transition-all border border-slate-100"
-        >
+        <button onClick={() => onNavigate('home')} className="size-10 bg-slate-50 text-secondary rounded-xl flex items-center justify-center active:scale-90 border border-slate-100">
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
         <div className="text-center">
@@ -118,10 +127,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
         </div>
         <div className="flex items-center gap-2">
           {isOwnProfile && (
-             <button 
-                onClick={onLogout}
-                className="size-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center active:scale-90 border border-slate-100"
-              >
+             <button onClick={onLogout} className="size-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center active:scale-90 border border-slate-100">
                 <span className="material-symbols-outlined text-[20px]">logout</span>
               </button>
           )}
@@ -129,15 +135,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
             <button 
               onClick={() => isEditing ? handleSaveProfile() : setIsEditing(true)}
               disabled={isUploading}
-              className={`size-10 rounded-xl flex items-center justify-center transition-all active:scale-90 shadow-lg ${
-                isEditing ? 'bg-primary text-white shadow-primary/20' : 'bg-white border border-slate-100 text-secondary'
-              }`}
+              className={`size-10 rounded-xl flex items-center justify-center transition-all active:scale-90 shadow-lg ${isEditing ? 'bg-primary text-white shadow-primary/20' : 'bg-white border border-slate-100 text-secondary'}`}
             >
-              {isUploading ? (
-                <div className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <span className="material-symbols-outlined text-[20px]">{isEditing ? 'done' : 'settings'}</span>
-              )}
+              {isUploading ? <div className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div> : <span className="material-symbols-outlined text-[20px]">{isEditing ? 'done' : 'settings'}</span>}
             </button>
           ) : <div className="size-10"></div>}
         </div>
@@ -148,43 +148,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
           <div className="absolute inset-0 bg-gradient-to-b from-secondary/5 to-transparent pointer-events-none"></div>
           
           <div className="flex flex-col items-center relative z-10">
-            <div 
-              className={`relative mb-8 group ${isOwnProfile && !isUploading ? 'cursor-pointer active:scale-95' : ''} transition-all`} 
-              onClick={handleAvatarClick}
-            >
+            <div className={`relative mb-8 group ${isOwnProfile && !isUploading ? 'cursor-pointer active:scale-95' : ''} transition-all`} onClick={handleAvatarClick}>
               <div className="size-40 rounded-full border-8 border-white shadow-xl relative transition-transform bg-slate-100 overflow-hidden flex items-center justify-center">
-                 
-                 {/* Placeholder Animado (Shimmer) */}
-                 {isImageSyncing && (
-                   <div className="absolute inset-0 shimmer-bg animate-shimmer z-0"></div>
-                 )}
-
-                 {/* Imagem com Lazy Loading e Transição Suave */}
-                 <img 
-                   key={player.avatar}
-                   src={player.avatar} 
-                   loading="lazy"
-                   className={`size-full object-cover transition-all duration-500 ease-in-out ${!isImageSyncing ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`} 
-                   alt={player.name}
-                   onLoad={handleImageLoad}
-                   onError={handleImageError}
-                 />
-                 
-                 {/* Feedback de Upload/Processamento em cima da imagem */}
+                 {isImageSyncing && <div className="absolute inset-0 shimmer-bg animate-shimmer z-0"></div>}
+                 <img key={player.avatar} src={player.avatar} loading="lazy" className={`size-full object-cover transition-all duration-500 ${!isImageSyncing ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`} alt={player.name} onLoad={handleImageLoad} onError={handleImageError} />
                  {isUploading && (
                     <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white backdrop-blur-sm z-20">
                       <div className="size-8 border-4 border-white/30 border-t-white rounded-full animate-spin mb-2"></div>
-                      <span className="text-[8px] font-black uppercase tracking-widest animate-pulse">
-                        Sincronizando...
-                      </span>
+                      <span className="text-[8px] font-black uppercase tracking-widest animate-pulse">Sincronizando...</span>
                     </div>
                  )}
-
-                 {isOwnProfile && !showSpinner && (
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white backdrop-blur-[2px]">
-                      <span className="material-symbols-outlined text-2xl">photo_camera</span>
-                    </div>
-                 )}
+                 {isOwnProfile && !showSpinner && <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white backdrop-blur-[2px]"><span className="material-symbols-outlined text-2xl">photo_camera</span></div>}
               </div>
               <div className="absolute -bottom-2 -right-2 size-14 bg-secondary text-white rounded-2xl border-4 border-white flex flex-col items-center justify-center shadow-xl rotate-6">
                  <span className="text-xl font-black italic leading-none">{player.rating}</span>
@@ -194,17 +168,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
             
             {isEditing ? (
               <div className="w-full max-w-[300px] animate-scale-in">
-                <input 
-                  value={editData.name}
-                  onChange={(e) => setEditData({...editData, name: e.target.value})}
-                  className="w-full h-12 bg-white border border-slate-200 rounded-2xl px-6 text-center text-xl font-black text-secondary focus:border-primary shadow-sm mb-4"
-                  placeholder="Nome"
-                />
-                <select 
-                  value={editData.position}
-                  onChange={(e) => setEditData({...editData, position: e.target.value as any})}
-                  className="w-full h-12 bg-white border border-slate-200 rounded-2xl px-6 text-center text-sm font-black text-secondary focus:border-primary shadow-sm"
-                >
+                <input value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value})} className="w-full h-12 bg-white border border-slate-200 rounded-2xl px-6 text-center text-xl font-black text-secondary focus:border-primary shadow-sm mb-4" placeholder="Nome" />
+                <select value={editData.position} onChange={(e) => setEditData({...editData, position: e.target.value as any})} className="w-full h-12 bg-white border border-slate-200 rounded-2xl px-6 text-center text-sm font-black text-secondary focus:border-primary shadow-sm">
                   <option value="Goalkeeper">Goleiro</option>
                   <option value="Defender">Defesa</option>
                   <option value="Midfielder">Meio</option>
@@ -213,12 +178,43 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
               </div>
             ) : (
               <div className="animate-slide-up">
-                <h1 className="text-3xl font-black text-secondary uppercase italic tracking-tighter mb-3 leading-tight">{player.name}</h1>
-                <span className="bg-secondary text-white px-6 py-2 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-secondary/10">{player.position}</span>
+                <h1 className="text-3xl font-black text-secondary uppercase italic tracking-tighter mb-1 leading-tight">{player.name}</h1>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="bg-secondary text-white px-4 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">{player.position}</span>
+                  {player.role === 'admin' && <span className="bg-primary text-white px-4 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1"><span className="material-symbols-outlined text-[12px] font-bold">verified</span> ADM</span>}
+                </div>
               </div>
             )}
           </div>
         </div>
+
+        {/* ADMIN TOOLS PANEL */}
+        {isAdmin && !isOwnProfile && (
+          <div className="px-6 mb-12 animate-slide-up">
+            <div className="bg-slate-900 rounded-[2.5rem] p-6 text-white overflow-hidden relative">
+              <div className="absolute top-0 right-0 size-32 bg-primary/10 rounded-bl-full pointer-events-none"></div>
+              <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-4">Painel Administrativo</p>
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={handleToggleAdmin}
+                  className="w-full h-12 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-between px-5 transition-all active:scale-95 border border-white/5"
+                >
+                  <span className="text-[11px] font-bold uppercase tracking-widest">
+                    {player.role === 'admin' ? 'Rebaixar para Jogador' : 'Promover a Administrador'}
+                  </span>
+                  <span className="material-symbols-outlined text-primary">{player.role === 'admin' ? 'person_off' : 'verified_user'}</span>
+                </button>
+                <button 
+                  onClick={handleDeletePlayer}
+                  className="w-full h-12 bg-primary/10 hover:bg-primary/20 rounded-xl flex items-center justify-between px-5 transition-all active:scale-95 border border-primary/20"
+                >
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-primary">Excluir Atleta do Elenco</span>
+                  <span className="material-symbols-outlined text-primary">delete_forever</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="px-6 grid grid-cols-3 gap-4 mb-12 -mt-8 relative z-20">
           {[
@@ -226,11 +222,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
             { val: player.assists, label: 'Assists', color: 'bg-white text-secondary border border-slate-100' },
             { val: player.matches, label: 'Partidas', color: 'bg-secondary text-white shadow-secondary/20' }
           ].map((s, idx) => (
-            <div 
-              key={s.label} 
-              className={`rounded-[1.8rem] p-5 flex flex-col items-center justify-center shadow-xl animate-scale-in ${s.color}`}
-              style={{ animationDelay: `${idx * 0.05}s` }}
-            >
+            <div key={s.label} className={`rounded-[1.8rem] p-5 flex flex-col items-center justify-center shadow-xl animate-scale-in ${s.color}`} style={{ animationDelay: `${idx * 0.05}s` }}>
               <span className="text-2xl font-black italic mb-1 leading-none">{s.val}</span>
               <span className="text-[8px] font-black uppercase tracking-widest opacity-60 text-center leading-none">{s.label}</span>
             </div>
@@ -263,11 +255,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
                     <span className="text-xl font-black text-secondary italic leading-none">{value}</span>
                   </div>
                   {isEditing ? (
-                    <input 
-                      type="range" min="0" max="100" value={value}
-                      onChange={(e) => setEditData({...editData, stats: { ...editData.stats, [skill.key]: parseInt(e.target.value) }})}
-                      className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-primary"
-                    />
+                    <input type="range" min="0" max="100" value={value} onChange={(e) => setEditData({...editData, stats: { ...editData.stats, [skill.key]: parseInt(e.target.value) }})} className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-primary" />
                   ) : (
                     <div className="w-full h-3 bg-slate-50 rounded-full overflow-hidden p-0.5 border border-slate-100">
                       <div className={`h-full ${skill.color} rounded-full transition-all duration-1000 shadow-sm`} style={{ width: `${value}%` }}></div>

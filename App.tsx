@@ -7,7 +7,6 @@ import { playerService } from './services/playerService';
 import { matchService } from './services/matchService';
 import BottomNav from './components/BottomNav';
 
-// Lazy load screens
 const LoginScreen = lazy(() => import('./screens/LoginScreen'));
 const RegistrationScreen = lazy(() => import('./screens/RegistrationScreen'));
 const ArenaScreen = lazy(() => import('./screens/ArenaScreen'));
@@ -88,11 +87,7 @@ const App: React.FC = () => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const profile = await playerService.getPlayerProfile(firebaseUser.uid);
-        dispatch({ 
-          type: 'SET_AUTH', 
-          user: firebaseUser, 
-          needsRegistration: !profile 
-        });
+        dispatch({ type: 'SET_AUTH', user: firebaseUser, needsRegistration: !profile });
       } else {
         dispatch({ type: 'SET_AUTH', user: null });
       }
@@ -102,73 +97,49 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (loading || !user || currentScreen === 'registration') return;
-
     let unsubscribePlayers: (() => void) | undefined;
     let unsubscribeMatch: (() => void) | undefined;
-    
     const initData = async () => {
       try {
         unsubscribePlayers = playerService.subscribeToPlayers(
           (data) => dispatch({ type: 'SET_PLAYERS', players: data }),
           (err) => dispatch({ type: 'SET_ERROR', error: err.message })
         );
-
-        unsubscribeMatch = matchService.subscribeToActiveMatch(
-          (match) => dispatch({ type: 'SET_MATCH', match })
-        );
-
+        unsubscribeMatch = matchService.subscribeToActiveMatch((match) => dispatch({ type: 'SET_MATCH', match }));
       } catch (err: any) {
         dispatch({ type: 'SET_ERROR', error: err.message });
       }
     };
-
     initData();
-    return () => {
-      unsubscribePlayers?.();
-      unsubscribeMatch?.();
-    };
+    return () => { unsubscribePlayers?.(); unsubscribeMatch?.(); };
   }, [user, loading, currentScreen]);
 
   const navigateTo = useCallback((screen: Screen, data?: any) => {
     const currentPlayer = players.find(p => p.id === user?.uid);
     const isAdmin = currentPlayer?.role === 'admin' || user?.email === 'diiogo49@gmail.com';
-
     if ((screen === 'finance' || screen === 'create-match') && !isAdmin) {
       alert("Acesso restrito ao Administrador.");
-      dispatch({ type: 'NAVIGATE', screen: 'home' });
       return;
     }
-
     dispatch({ type: 'NAVIGATE', screen, data });
   }, [user, players]);
 
   const toggleConfirm = useCallback(async (id: string) => {
     const player = players.find(p => p.id === id);
     if (player) {
-      try {
-        await playerService.togglePresence(id, player.confirmed);
-      } catch (err: any) {
-        alert("Erro ao confirmar presença: " + err.message);
-      }
+      try { await playerService.togglePresence(id, player.confirmed); } catch (err: any) { alert("Erro ao confirmar presença."); }
     }
   }, [players]);
 
   const handleUpdateAvatar = useCallback(async (id: string, file: File | string) => {
     try {
-      const cdnUrl = file instanceof File 
-        ? await playerService.uploadAvatarToStorage(id, file)
-        : file;
+      const cdnUrl = file instanceof File ? await playerService.uploadAvatarToStorage(id, file) : file;
       await playerService.updateAvatar(id, cdnUrl);
-      // O Firestore onSnapshot vai atualizar a lista 'players' e o 'selectedPlayer' refletirá isso automaticamente
-    } catch (err: any) {
-      console.error("Avatar Update Error:", err);
-      alert("Erro ao atualizar foto: " + err.message);
-      throw err; // Repassa para o componente tratar o loading
-    }
+    } catch (err: any) { alert("Erro ao atualizar foto."); throw err; }
   }, []);
 
   const handleLogout = useCallback(async () => {
-    if(window.confirm("Deseja realmente sair da sua conta?")) {
+    if(window.confirm("Deseja realmente sair?")) {
       await auth.signOut();
       dispatch({ type: 'NAVIGATE', screen: 'login' });
     }
@@ -180,67 +151,37 @@ const App: React.FC = () => {
         <div className="h-full w-full flex flex-col items-center justify-center p-8 bg-background text-center">
           <span className="material-symbols-outlined text-red-500 text-6xl mb-6">error</span>
           <h2 className="text-2xl font-black text-secondary uppercase italic">Erro de Sincronização</h2>
-          <p className="text-sm text-secondary/60 mb-8 max-w-md mx-auto">{error}</p>
           <button onClick={() => window.location.reload()} className="px-12 h-14 bg-primary text-white rounded-2xl font-black transition-all active:scale-95">Recarregar</button>
         </div>
       );
     }
-    
     if (loading) return <ScreenLoader />;
-    
     const currentPlayer = user ? players.find(p => p.id === user.uid) : null;
     const selectedPlayer = players.find(p => p.id === selectedPlayerId) || currentPlayer;
 
     return (
       <Suspense fallback={<ScreenLoader />}>
         {currentScreen === 'login' && <LoginScreen onLogin={() => {}} />}
-        {currentScreen === 'registration' && user && (
-          <RegistrationScreen user={user} onComplete={() => navigateTo('home')} />
-        )}
-        {currentScreen === 'home' && (
-          <ArenaScreen 
-            players={players} 
-            activeMatch={activeMatch}
-            currentPlayer={currentPlayer || null} 
-            onToggleConfirm={toggleConfirm} 
-            onNavigate={navigateTo} 
-          />
-        )}
-        {currentScreen === 'players' && <PlayerListScreen players={players} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} />}
+        {currentScreen === 'registration' && user && <RegistrationScreen user={user} onComplete={() => navigateTo('home')} />}
+        {currentScreen === 'home' && <ArenaScreen players={players} activeMatch={activeMatch} currentPlayer={currentPlayer || null} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} />}
+        {currentScreen === 'players' && <PlayerListScreen players={players} onToggleConfirm={toggleConfirm} onNavigate={navigateTo} currentPlayer={currentPlayer} />}
         {currentScreen === 'scout' && <ScoutScreen players={players} onNavigate={navigateTo} />}
         {currentScreen === 'draw' && <DrawScreen players={players} onNavigate={navigateTo} />}
         {currentScreen === 'finance' && <FinanceScreen players={players} currentPlayer={currentPlayer || null} onNavigate={navigateTo} />}
         {currentScreen === 'create-match' && <CreateMatchScreen onNavigate={navigateTo} />}
-        {currentScreen === 'profile' && selectedPlayer && (
-          <ProfileScreen 
-            player={selectedPlayer} 
-            players={players} 
-            currentPlayer={currentPlayer || null}
-            onNavigate={navigateTo} 
-            onUpdateAvatar={handleUpdateAvatar} 
-            onLogout={handleLogout}
-          />
-        )}
+        {currentScreen === 'profile' && selectedPlayer && <ProfileScreen player={selectedPlayer} players={players} currentPlayer={currentPlayer || null} onNavigate={navigateTo} onUpdateAvatar={handleUpdateAvatar} onLogout={handleLogout} />}
       </Suspense>
     );
   };
 
   return (
-    <div 
-      className="w-full h-full bg-background relative flex flex-col overflow-hidden"
-      style={{ height: 'var(--app-height)' }}
-    >
+    <div className="w-full h-full bg-background relative flex flex-col overflow-hidden" style={{ height: 'var(--app-height)' }}>
       <main className="flex-1 overflow-hidden relative">
-        <div className="h-full w-full max-w-[1200px] mx-auto relative">
-          {renderScreen()}
-        </div>
+        <div className="h-full w-full max-w-[1200px] mx-auto relative">{renderScreen()}</div>
       </main>
-      
       {user && currentScreen !== 'login' && currentScreen !== 'registration' && (
         <footer className="shrink-0 z-50 w-full bg-white border-t border-slate-100 pb-safe">
-          <div className="max-w-[1200px] mx-auto">
-            <BottomNav activeScreen={currentScreen} onNavigate={navigateTo} />
-          </div>
+          <div className="max-w-[1200px] mx-auto"><BottomNav activeScreen={currentScreen} onNavigate={navigateTo} /></div>
         </footer>
       )}
     </div>

@@ -1,19 +1,26 @@
 
 import React, { useState, useMemo } from 'react';
 import { Player, Screen } from '../types';
+import { playerService } from '../services/playerService';
 
 interface PlayerListScreenProps {
   players: Player[];
   onToggleConfirm: (id: string) => void;
   onNavigate: (screen: Screen, data?: any) => void;
+  currentPlayer?: Player | null;
 }
 
-const PlayerListScreen: React.FC<PlayerListScreenProps> = ({ players, onToggleConfirm, onNavigate }) => {
+const PlayerListScreen: React.FC<PlayerListScreenProps> = ({ players, onToggleConfirm, onNavigate, currentPlayer }) => {
   const [tab, setTab] = useState('confirmados');
   const [search, setSearch] = useState('');
   const [posFilter, setPosFilter] = useState('Todos');
   const [sortBy, setSortBy] = useState<'rating' | 'name'>('rating');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newPos, setNewPos] = useState<Player['position']>('Midfielder');
+  const [isCreating, setIsCreating] = useState(false);
 
+  const isAdmin = currentPlayer?.role === 'admin';
   const positions = ['Todos', 'Goalkeeper', 'Defender', 'Midfielder', 'Forward'];
 
   const filteredPlayers = useMemo(() => {
@@ -39,14 +46,36 @@ const PlayerListScreen: React.FC<PlayerListScreenProps> = ({ players, onToggleCo
     return list;
   }, [players, tab, search, posFilter, sortBy]);
 
+  const handleManualCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName.trim()) return;
+    setIsCreating(true);
+    try {
+      await playerService.createManualPlayer(newName, newPos);
+      setShowAddModal(false);
+      setNewName('');
+    } catch (err) {
+      alert("Erro ao criar atleta.");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <div className="h-full bg-background flex flex-col relative">
       <header className="flex items-center justify-between px-6 py-6 sticky top-0 bg-white/90 backdrop-blur-md z-30 border-b border-slate-100 shrink-0">
-        <button onClick={() => onNavigate('home')} className="size-10 flex items-center justify-center rounded-xl bg-slate-50 text-secondary hover:text-primary transition-all active:scale-90">
+        <button onClick={() => onNavigate('home')} className="size-10 flex items-center justify-center rounded-xl bg-slate-50 text-secondary active:scale-90">
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
         <h2 className="text-lg font-black text-secondary italic tracking-tighter">Atletas</h2>
-        <div className="size-10"></div>
+        {isAdmin ? (
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="size-10 bg-primary text-white rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 active:scale-90"
+          >
+            <span className="material-symbols-outlined font-bold">person_add</span>
+          </button>
+        ) : <div className="size-10"></div>}
       </header>
 
       <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
@@ -57,13 +86,7 @@ const PlayerListScreen: React.FC<PlayerListScreenProps> = ({ players, onToggleCo
 
         <div className="px-6 mb-6">
           <div className="relative">
-            <input 
-              type="text" 
-              placeholder="Pesquisar atleta..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-12 bg-white border border-slate-200 rounded-2xl px-12 text-sm font-bold text-secondary focus:outline-none focus:border-primary transition-all shadow-sm"
-            />
+            <input type="text" placeholder="Pesquisar atleta..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full h-12 bg-white border border-slate-200 rounded-2xl px-12 text-sm font-bold text-secondary focus:outline-none focus:border-primary transition-all shadow-sm" />
             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">search</span>
           </div>
         </div>
@@ -73,18 +96,9 @@ const PlayerListScreen: React.FC<PlayerListScreenProps> = ({ players, onToggleCo
             { id: 'confirmados', label: 'Convocados', count: players.filter(p => p.confirmed).length, icon: 'check_circle', color: 'text-primary' },
             { id: 'pendentes', label: 'Lista de Espera', count: players.filter(p => !p.confirmed).length, icon: 'schedule', color: 'text-amber-500' }
           ].map(t => (
-            <button 
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`flex-1 pb-4 flex flex-col items-center gap-1.5 relative transition-all ${tab === t.id ? 'opacity-100' : 'opacity-40 grayscale'}`}
-            >
-              <div className="flex items-center gap-2">
-                <span className={`material-symbols-outlined text-[18px] ${t.color}`}>{t.icon}</span>
-                <span className="text-[10px] font-black uppercase text-secondary tracking-widest">{t.label}</span>
-              </div>
-              <div className={`px-3 py-0.5 rounded-full text-[10px] font-black ${tab === t.id ? 'bg-primary/10 text-primary' : 'bg-slate-50 text-slate-400'}`}>
-                {t.count}
-              </div>
+            <button key={t.id} onClick={() => setTab(t.id)} className={`flex-1 pb-4 flex flex-col items-center gap-1.5 relative transition-all ${tab === t.id ? 'opacity-100' : 'opacity-40 grayscale'}`}>
+              <div className="flex items-center gap-2"><span className={`material-symbols-outlined text-[18px] ${t.color}`}>{t.icon}</span><span className="text-[10px] font-black uppercase text-secondary tracking-widest">{t.label}</span></div>
+              <div className={`px-3 py-0.5 rounded-full text-[10px] font-black ${tab === t.id ? 'bg-primary/10 text-primary' : 'bg-slate-50 text-slate-400'}`}>{t.count}</div>
               {tab === t.id && <div className="absolute bottom-0 w-full h-1 bg-primary rounded-full shadow-[0_0_8px_rgba(255,0,0,0.3)]"></div>}
             </button>
           ))}
@@ -92,15 +106,7 @@ const PlayerListScreen: React.FC<PlayerListScreenProps> = ({ players, onToggleCo
 
         <div className="px-6 mb-6 overflow-x-auto no-scrollbar flex gap-2">
           {positions.map(pos => (
-            <button
-              key={pos}
-              onClick={() => setPosFilter(pos)}
-              className={`px-5 h-9 rounded-full text-[9px] font-black uppercase tracking-widest transition-all border whitespace-nowrap ${
-                posFilter === pos ? 'bg-secondary text-white border-secondary shadow-md' : 'bg-white text-slate-400 border-slate-100'
-              }`}
-            >
-              {pos}
-            </button>
+            <button key={pos} onClick={() => setPosFilter(pos)} className={`px-5 h-9 rounded-full text-[9px] font-black uppercase tracking-widest transition-all border whitespace-nowrap ${posFilter === pos ? 'bg-secondary text-white border-secondary shadow-md' : 'bg-white text-slate-400 border-slate-100'}`}>{pos}</button>
           ))}
         </div>
 
@@ -109,32 +115,55 @@ const PlayerListScreen: React.FC<PlayerListScreenProps> = ({ players, onToggleCo
             <div className="py-20 text-center text-slate-300 text-[10px] font-black uppercase tracking-widest">Nenhum atleta encontrado</div>
           ) : (
             filteredPlayers.map((player, idx) => (
-              <div 
-                key={player.id}
-                onClick={() => onNavigate('profile', player)}
-                className="flex items-center gap-4 p-3 rounded-2xl bg-white border border-slate-100 shadow-sm active:scale-[0.98] transition-all group"
-                style={{ animationDelay: `${idx * 0.05}s` }}
-              >
+              <div key={player.id} onClick={() => onNavigate('profile', player)} className="flex items-center gap-4 p-3 rounded-2xl bg-white border border-slate-100 shadow-sm active:scale-[0.98] transition-all group" style={{ animationDelay: `${idx * 0.05}s` }}>
                 <div className="relative shrink-0">
-                  <img src={player.avatar} className="size-14 rounded-full object-cover border-2 border-slate-50" />
-                  {player.confirmed && (
-                    <div className="absolute -bottom-1 -right-1 size-5 bg-primary rounded-full border-2 border-white flex items-center justify-center">
-                      <span className="material-symbols-outlined text-white text-[10px] font-bold">check</span>
-                    </div>
-                  )}
+                  <img src={player.avatar} className="size-14 rounded-full object-cover border-2 border-slate-50" alt={player.name} />
+                  {player.confirmed && <div className="absolute -bottom-1 -right-1 size-5 bg-primary rounded-full border-2 border-white flex items-center justify-center"><span className="material-symbols-outlined text-white text-[10px] font-bold">check</span></div>}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="text-sm font-black text-secondary uppercase italic tracking-tight truncate group-hover:text-primary transition-colors">{player.name}</h4>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em]">{player.position}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em]">{player.position}</p>
+                    {player.role === 'admin' && <span className="text-[7px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-black uppercase">ADM</span>}
+                  </div>
                 </div>
-                <div className="text-right shrink-0">
-                   <div className="text-lg font-black text-primary italic">{player.rating}</div>
-                </div>
+                <div className="text-right shrink-0"><div className="text-lg font-black text-primary italic">{player.rating}</div></div>
               </div>
             ))
           )}
         </div>
       </div>
+
+      {/* MODAL ADICIONAR ATLETA */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
+          <div className="absolute inset-0 bg-secondary/80 backdrop-blur-sm animate-fade-in" onClick={() => setShowAddModal(false)}></div>
+          <div className="bg-white w-full max-w-[360px] rounded-[2.5rem] p-8 relative z-10 shadow-2xl animate-scale-in">
+            <h2 className="text-xl font-black text-secondary uppercase italic text-center mb-6">Inserir Atleta</h2>
+            <form onSubmit={handleManualCreate} className="space-y-4">
+              <div>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome Completo</label>
+                <input required value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-5 text-sm font-bold text-secondary" placeholder="Ex: Rogério Ceni" />
+              </div>
+              <div>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Posição</label>
+                <select value={newPos} onChange={(e) => setNewPos(e.target.value as any)} className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-5 text-sm font-bold text-secondary">
+                  <option value="Goalkeeper">Goleiro</option>
+                  <option value="Defender">Defensor</option>
+                  <option value="Midfielder">Meio-Campo</option>
+                  <option value="Forward">Atacante</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3 pt-4">
+                <button type="button" onClick={() => setShowAddModal(false)} className="h-12 rounded-xl text-[10px] font-black uppercase text-slate-400 border border-slate-100">Cancelar</button>
+                <button type="submit" disabled={isCreating} className="h-12 bg-primary text-white rounded-xl text-[10px] font-black uppercase shadow-lg shadow-primary/20 flex items-center justify-center">
+                  {isCreating ? <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Confirmar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
