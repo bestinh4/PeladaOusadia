@@ -64,7 +64,6 @@ const App: React.FC = () => {
         unsubscribePlayers = playerService.subscribeToPlayers(
           (data) => {
             setPlayers(data);
-            // Sync selected player if currently viewing profile
             if (selectedPlayer) {
               const updated = data.find(p => p.id === selectedPlayer.id);
               if (updated) setSelectedPlayer(updated);
@@ -117,8 +116,11 @@ const App: React.FC = () => {
     }
   };
 
-  const handleUpdateAvatar = async (id: string, avatarUrl: string) => {
+  // Optimized Avatar Handling
+  const handleUpdateAvatar = async (id: string, file: File | string) => {
     if (isDemoMode) {
+      // In demo mode, we still use Base64 as there is no backend storage
+      const avatarUrl = typeof file === 'string' ? file : await fileToBase64(file);
       const updated = players.map(p => p.id === id ? { ...p, avatar: avatarUrl } : p);
       setPlayers(updated);
       localStorage.setItem('oa_players', JSON.stringify(updated));
@@ -129,11 +131,27 @@ const App: React.FC = () => {
     }
 
     try {
-      await playerService.updateAvatar(id, avatarUrl);
-      // Selected player will be updated via the onSnapshot observer in useEffect
+      if (file instanceof File) {
+        // 1. Upload to Storage and get CDN URL
+        const cdnUrl = await playerService.uploadAvatarToStorage(id, file);
+        // 2. Update Firestore reference
+        await playerService.updateAvatar(id, cdnUrl);
+      } else {
+        // Fallback if raw URL provided
+        await playerService.updateAvatar(id, file);
+      }
     } catch (err: any) {
-      alert("Error updating avatar: " + err.message);
+      alert("Storage Error: Ensure Firebase Storage is enabled in your project. " + err.message);
     }
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleLogout = async () => {

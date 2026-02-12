@@ -6,7 +6,7 @@ interface ProfileScreenProps {
   player: Player;
   players: Player[];
   onNavigate: (screen: Screen, data?: any) => void;
-  onUpdateAvatar: (id: string, avatarUrl: string) => Promise<void>;
+  onUpdateAvatar: (id: string, file: File | string) => Promise<void>;
 }
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, players, onNavigate, onUpdateAvatar }) => {
@@ -26,21 +26,20 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, players, onNaviga
     if (!file) return;
 
     setIsUploading(true);
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64String = reader.result as string;
-      try {
-        await onUpdateAvatar(player.id, base64String);
-      } finally {
-        setIsUploading(false);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Pass the raw file to the optimized handler
+      await onUpdateAvatar(player.id, file);
+    } catch (err) {
+      console.error("Upload failed", err);
+    } finally {
+      setIsUploading(false);
+      // Reset input value to allow re-selection of same file if needed
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   return (
     <div className="h-full bg-surface-gray overflow-y-auto no-scrollbar pb-32">
-      {/* Hidden File Input */}
       <input 
         type="file" 
         ref={fileInputRef} 
@@ -49,7 +48,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, players, onNaviga
         className="hidden" 
       />
 
-      {/* Header */}
       <header className="flex items-center justify-between px-6 py-6 bg-white sticky top-0 z-30 shadow-sm border-b border-gray-50">
         <button onClick={() => onNavigate('players')} className="size-10 bg-gray-50 rounded-xl flex items-center justify-center text-navy active:scale-90 transition-transform">
           <span className="material-symbols-outlined">arrow_back</span>
@@ -63,14 +61,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, players, onNaviga
         </button>
       </header>
 
-      {/* Hero Section - FUT CARD ELITE */}
       <div className="p-8 flex justify-center animate-fade-in-up">
         <div className="w-full max-w-[320px] aspect-[3/4.2] rounded-[2.5rem] overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.25)] relative croatia-pattern group border-4 border-navy/20">
-           {/* Card Overlays */}
            <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/40 to-transparent"></div>
            <div className="absolute inset-0 premium-shimmer opacity-30"></div>
            
-           {/* Top Stats - FUT Style */}
            <div className="absolute top-10 left-8 flex flex-col items-center gap-1 z-20">
               <span className="text-white text-6xl font-black italic leading-none drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)] tracking-tighter">{player.rating}</span>
               <span className="text-primary text-xl font-black italic tracking-widest drop-shadow-md uppercase">PRO</span>
@@ -79,7 +74,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, players, onNaviga
               <span className="material-symbols-outlined text-white/60 text-[20px] mt-1">shield</span>
            </div>
 
-           {/* Edit Avatar Button */}
            <button 
              onClick={handleAvatarClick}
              disabled={isUploading}
@@ -92,15 +86,23 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, players, onNaviga
               )}
            </button>
 
-           {/* Player Image with advanced masking */}
            <div className="absolute bottom-28 left-1/2 -translate-x-1/2 w-full h-full flex items-end justify-center pointer-events-none z-10">
               <img 
                 src={player.avatar} 
-                className={`w-[120%] h-[85%] object-cover object-top mask-image-gradient brightness-[1.1] contrast-[1.05] transition-opacity duration-500 ${isUploading ? 'opacity-50' : 'opacity-100'}`} 
+                className={`w-[120%] h-[85%] object-cover object-top mask-image-gradient brightness-[1.1] contrast-[1.05] transition-opacity duration-500 ${isUploading ? 'opacity-50 blur-[2px]' : 'opacity-100'}`} 
               />
+              {isUploading && (
+                <div className="absolute inset-0 flex items-center justify-center z-40 bg-navy/20">
+                   <div className="flex flex-col items-center gap-2">
+                     <div className="w-12 h-1 bg-white/20 rounded-full overflow-hidden">
+                        <div className="h-full bg-primary animate-[shimmer_1s_infinite_linear]" style={{width: '60%'}}></div>
+                     </div>
+                     <span className="text-[8px] font-black text-white uppercase tracking-[0.2em]">Syncing to Cloud...</span>
+                   </div>
+                </div>
+              )}
            </div>
 
-           {/* Name Banner - Glassmorphic */}
            <div className="absolute bottom-0 w-full p-8 flex flex-col items-center bg-gradient-to-t from-navy to-transparent pt-32 z-20">
               <h1 className="text-white text-3xl font-black italic uppercase tracking-tighter text-center drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]">{player.name}</h1>
               <div className="flex items-center gap-3 mt-2">
@@ -112,7 +114,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, players, onNaviga
         </div>
       </div>
 
-      {/* Statistics Section - Refined Grid */}
       <div className="px-6 space-y-6 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
         <div className="flex items-center justify-between px-1">
            <h3 className="text-xl font-black italic text-navy uppercase tracking-tighter">Season Stats</h3>
@@ -141,7 +142,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, players, onNaviga
         </div>
       </div>
 
-      {/* Similar Players - Premium Scroll */}
       {similarPlayers.length > 0 && (
         <div className="px-6 mt-12 space-y-5 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
           <div className="flex items-center justify-between px-1">
@@ -172,7 +172,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, players, onNaviga
         </div>
       )}
 
-      {/* Fan Rating Section - Polished Feedback */}
       <div className="px-6 mt-10 space-y-5 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
         <h3 className="text-xl font-black italic text-navy uppercase tracking-tighter">Fan Performance Index</h3>
         <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-white space-y-8">

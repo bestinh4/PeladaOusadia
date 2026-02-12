@@ -10,14 +10,15 @@ import {
   getDocs,
   FirestoreError
 } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "../lib/firebase";
 import { Player } from "../types";
 import { MOCK_PLAYERS } from "../constants";
 
 const COLLECTION_NAME = "players";
 
 export const playerService = {
-  // Escuta atletas em tempo real com tratamento de erro
+  // Real-time listener
   subscribeToPlayers: (
     callback: (players: Player[]) => void, 
     onError: (error: FirestoreError) => void
@@ -40,7 +41,7 @@ export const playerService = {
     );
   },
 
-  // Alterna confirmação de presença com tratamento de erro
+  // Toggle presence
   togglePresence: async (playerId: string, currentStatus: boolean) => {
     try {
       const playerRef = doc(db, COLLECTION_NAME, playerId);
@@ -53,7 +54,25 @@ export const playerService = {
     }
   },
 
-  // Atualiza a foto do atleta
+  // Optimized Image Upload: Files go to Firebase Storage, URLs go to Firestore
+  uploadAvatarToStorage: async (playerId: string, file: File): Promise<string> => {
+    try {
+      // Create a unique reference for the player's avatar
+      const storageRef = ref(storage, `avatars/${playerId}_${Date.now()}`);
+      
+      // Upload raw bytes (more efficient than Base64)
+      const snapshot = await uploadBytes(storageRef, file);
+      
+      // Get the public CDN URL
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      return downloadURL;
+    } catch (error) {
+      console.error("Storage Upload Error:", error);
+      throw error;
+    }
+  },
+
+  // Update Firestore with the new CDN URL
   updateAvatar: async (playerId: string, avatarUrl: string) => {
     try {
       const playerRef = doc(db, COLLECTION_NAME, playerId);
@@ -61,12 +80,12 @@ export const playerService = {
         avatar: avatarUrl
       });
     } catch (error) {
-      console.error("Error updating avatar:", error);
+      console.error("Error updating avatar in Firestore:", error);
       throw error;
     }
   },
 
-  // Seed inicial com verificação de erro
+  // Initial seed
   seedPlayers: async () => {
     try {
       const q = collection(db, COLLECTION_NAME);
@@ -76,10 +95,10 @@ export const playerService = {
         for (const player of MOCK_PLAYERS) {
           await setDoc(doc(db, COLLECTION_NAME, player.id), player);
         }
-        console.log("Banco populado com sucesso!");
+        console.log("Database seeded successfully.");
       }
     } catch (error) {
-      console.error("Error seeding players (check your Firebase Rules):", error);
+      console.error("Seed Error:", error);
       throw error;
     }
   }

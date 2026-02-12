@@ -2,6 +2,7 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBa8kF4pSrx_-GuHVT_hGMgh_UmRc0NBx0",
@@ -15,11 +16,9 @@ const firebaseConfig = {
 // Singleton pattern to ensure we don't initialize multiple times
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize services with the app instance.
-// Using the official gstatic CDN ensures these internal services are properly
-// registered within the Firebase core registry.
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
 
 export { app };
