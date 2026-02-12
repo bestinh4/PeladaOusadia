@@ -1,0 +1,8 @@
+{
+  "name": "Copy of Ousadia & Alegria",
+  "description": "Professional Football Management app featuring team drawing, match scheduling, scouting rankings, and athlete profiles with a premium SaaS interface.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
