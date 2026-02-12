@@ -76,8 +76,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
 const ScreenLoader = () => (
   <div className="h-full w-full flex flex-col items-center justify-center bg-background gap-4">
-    <div className="size-10 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
-    <span className="text-[9px] font-black text-secondary/40 uppercase tracking-widest">Sincronizando...</span>
+    <div className="size-12 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
+    <span className="text-[10px] font-black text-secondary/40 uppercase tracking-[0.4em] animate-pulse">Sincronizando Elenco...</span>
   </div>
 );
 
@@ -176,10 +176,10 @@ const App: React.FC = () => {
     if (error && user) {
       return (
         <div className="h-full w-full flex flex-col items-center justify-center p-8 bg-background text-center">
-          <span className="material-symbols-outlined text-red-500 text-5xl mb-4">error</span>
-          <h2 className="text-xl font-black text-secondary uppercase italic">Erro de Conexão</h2>
-          <p className="text-xs text-secondary/60 mb-6">{error}</p>
-          <button onClick={() => window.location.reload()} className="w-full h-12 bg-primary text-white rounded-xl font-bold transition-all active:scale-95">Recarregar App</button>
+          <span className="material-symbols-outlined text-red-500 text-6xl mb-6">error</span>
+          <h2 className="text-2xl font-black text-secondary uppercase italic">Erro de Sincronização</h2>
+          <p className="text-sm text-secondary/60 mb-8 max-w-md mx-auto">{error}</p>
+          <button onClick={() => window.location.reload()} className="px-12 h-14 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95">Tentar Novamente</button>
         </div>
       );
     }
@@ -223,20 +223,23 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-center items-center h-full w-full bg-slate-100 overflow-hidden">
-      <div 
-        className="w-full h-full md:max-w-[430px] md:h-[92vh] md:max-h-[932px] md:my-auto bg-background shadow-2xl relative flex flex-col overflow-hidden md:rounded-[48px] border-none md:border-4 md:border-white transition-all duration-500 ease-in-out"
-        style={{ height: 'var(--app-height)' }}
-      >
-        <div className="flex-1 overflow-hidden relative">
+    <div 
+      className="w-full h-full bg-background relative flex flex-col overflow-hidden"
+      style={{ height: 'var(--app-height)' }}
+    >
+      <main className="flex-1 overflow-hidden relative">
+        <div className="h-full w-full max-w-[1200px] mx-auto relative">
           {renderScreen()}
         </div>
-        {user && currentScreen !== 'login' && currentScreen !== 'registration' && (
-          <div className="shrink-0 z-50">
+      </main>
+      
+      {user && currentScreen !== 'login' && currentScreen !== 'registration' && (
+        <footer className="shrink-0 z-50 w-full bg-white border-t border-slate-100">
+          <div className="max-w-[1200px] mx-auto">
             <BottomNav activeScreen={currentScreen} onNavigate={navigateTo} />
           </div>
-        )}
-      </div>
+        </footer>
+      )}
     </div>
   );
 };
