@@ -27,13 +27,20 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
 
   useEffect(() => {
     setImageLoaded(false);
-  }, [player.avatar]);
+    setEditData({
+      name: player.name,
+      position: player.position,
+      club: player.club || '',
+      number: player.number || 0,
+      stats: { ...player.stats }
+    });
+  }, [player]);
 
   const isOwnProfile = currentPlayer?.id === player.id;
   const isAdmin = currentPlayer?.role === 'admin';
 
   const handleAvatarClick = () => {
-    if (!isOwnProfile) return;
+    if (!isOwnProfile || loading) return;
     fileInputRef.current?.click();
   };
 
@@ -44,8 +51,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
       setImageLoaded(false);
       try {
         await onUpdateAvatar(player.id, file);
+      } catch (err) {
+        console.error("Erro no upload:", err);
+        alert("Erro ao enviar imagem. Verifique sua conexão.");
       } finally {
         setLoading(false);
+        // Reseta o input para permitir selecionar a mesma foto novamente se necessário
+        if (fileInputRef.current) fileInputRef.current.value = '';
       }
     }
   };
@@ -68,6 +80,15 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
 
   return (
     <div className="h-full bg-background flex flex-col relative overflow-hidden">
+      {/* Input de arquivo oculto - ESSENCIAL PARA O UPLOAD */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileChange} 
+        className="hidden" 
+        accept="image/*" 
+      />
+
       <header className="flex items-center justify-between px-6 py-6 sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-100">
         <button 
           onClick={() => onNavigate('home')} 
@@ -111,7 +132,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
           <div className="absolute inset-0 bg-gradient-to-b from-secondary/5 to-transparent pointer-events-none"></div>
           
           <div className="flex flex-col items-center relative z-10">
-            <div className={`relative mb-8 group ${isOwnProfile ? 'cursor-pointer' : ''}`} onClick={handleAvatarClick}>
+            <div 
+              className={`relative mb-8 group ${isOwnProfile && !loading ? 'cursor-pointer active:scale-95' : ''} transition-all`} 
+              onClick={handleAvatarClick}
+            >
               <div className="size-40 rounded-full border-8 border-white shadow-xl relative transition-transform bg-slate-100 overflow-hidden">
                  <img 
                    src={player.avatar} 
@@ -119,7 +143,16 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
                    alt={player.name}
                    onLoad={() => setImageLoaded(true)}
                  />
-                 {isOwnProfile && (
+                 
+                 {/* Estado de Carregamento (Overlay) */}
+                 {loading && (
+                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white backdrop-blur-sm">
+                      <div className="size-8 border-4 border-white/30 border-t-white rounded-full animate-spin mb-2"></div>
+                      <span className="text-[8px] font-black uppercase tracking-widest">Enviando...</span>
+                    </div>
+                 )}
+
+                 {isOwnProfile && !loading && (
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white backdrop-blur-[2px]">
                       <span className="material-symbols-outlined text-2xl">photo_camera</span>
                     </div>
@@ -136,9 +169,19 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ player, currentPlayer, on
                 <input 
                   value={editData.name}
                   onChange={(e) => setEditData({...editData, name: e.target.value})}
-                  className="w-full h-12 bg-white border border-slate-200 rounded-2xl px-6 text-center text-xl font-black text-secondary focus:border-primary shadow-sm"
+                  className="w-full h-12 bg-white border border-slate-200 rounded-2xl px-6 text-center text-xl font-black text-secondary focus:border-primary shadow-sm mb-4"
                   placeholder="Nome"
                 />
+                <select 
+                  value={editData.position}
+                  onChange={(e) => setEditData({...editData, position: e.target.value as any})}
+                  className="w-full h-12 bg-white border border-slate-200 rounded-2xl px-6 text-center text-sm font-black text-secondary focus:border-primary shadow-sm"
+                >
+                  <option value="Goalkeeper">Goleiro</option>
+                  <option value="Defender">Defesa</option>
+                  <option value="Midfielder">Meio</option>
+                  <option value="Forward">Ataque</option>
+                </select>
               </div>
             ) : (
               <div className="animate-slide-up">
