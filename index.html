@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>O&A Elite Pro</title>
-    <!-- Favicon to fix 404 error -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
     <script type="importmap">
     {
@@ -48,6 +47,30 @@
                         'xl': '1rem',
                         '2xl': '1.5rem',
                         '3xl': '2rem'
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
+                        'shimmer': 'shimmer 2s infinite linear',
+                        'float': 'float 3s ease-in-out infinite',
+                        'pulse-soft': 'pulse-soft 3s infinite ease-in-out'
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        shimmer: {
+                            '0%': { backgroundPosition: '-200% 0' },
+                            '100%': { backgroundPosition: '200% 0' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        'pulse-soft': {
+                            '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+                            '50%': { opacity: '0.8', transform: 'scale(1.02)' }
+                        }
                     }
                 }
             }
@@ -57,12 +80,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        @keyframes pulse-soft {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.02); }
-        }
-        .animate-pulse-soft { animation: pulse-soft 3s infinite ease-in-out; }
-
         .croatia-pattern {
             background-color: #09122C;
             background-image: 
@@ -74,13 +91,19 @@
             background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
         }
 
+        .premium-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite linear;
+        }
+
         .mask-image-gradient {
-            mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+            mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
         }
     </style>
 </head>
-<body class="bg-gray-100 font-sans antialiased text-gray-900">
+<body class="bg-[#f2f2f2] font-sans antialiased text-gray-900">
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
 </body>

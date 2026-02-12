@@ -14,39 +14,46 @@ const PlayerListScreen: React.FC<PlayerListScreenProps> = ({ players, onToggleCo
   return (
     <div className="h-full bg-surface-gray overflow-y-auto no-scrollbar pb-32">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-6 bg-white sticky top-0 z-20 border-b border-gray-50">
-        <div className="flex flex-col">
-          <span className="text-[10px] font-bold text-primary uppercase tracking-widest">O&A ELITE PRO</span>
-          <div className="flex items-center gap-2 text-[#1a0a0b]">
-             <span className="material-symbols-outlined text-primary fill-current">sports_soccer</span>
-             <h2 className="text-xl font-black italic">CHEGA+</h2>
+      <header className="flex items-center justify-between px-6 py-6 bg-white sticky top-0 z-30 border-b border-gray-100 shadow-sm">
+        <div className="flex flex-col animate-fade-in-up">
+          <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">Matchday Registry</span>
+          <div className="flex items-center gap-2 text-navy">
+             <span className="material-symbols-outlined text-primary fill-current text-[20px]">sports_soccer</span>
+             <h2 className="text-xl font-black italic tracking-tight">CONFIRMADOS</h2>
           </div>
         </div>
         <div className="flex gap-2">
-           <button className="size-10 rounded-full bg-surface-gray flex items-center justify-center text-gray-500">
-             <span className="material-symbols-outlined text-[20px]">notifications</span>
+           <button className="size-10 rounded-full bg-surface-gray border border-gray-100 flex items-center justify-center text-gray-400 hover:text-primary transition-colors active:scale-90">
+             <span className="material-symbols-outlined text-[22px]">search</span>
            </button>
-           <button className="size-10 rounded-full bg-surface-gray flex items-center justify-center text-gray-500">
-             <span className="material-symbols-outlined text-[20px]">menu</span>
+           <button className="size-10 rounded-full bg-surface-gray border border-gray-100 flex items-center justify-center text-gray-400 hover:text-navy transition-colors active:scale-90">
+             <span className="material-symbols-outlined text-[22px]">tune</span>
            </button>
         </div>
       </header>
 
-      {/* Main Action Section */}
-      <div className="px-6 py-8 bg-white space-y-6">
-        <button className="w-full h-14 bg-secondary text-white rounded-2xl flex items-center justify-center gap-3 font-bold uppercase tracking-widest shadow-xl shadow-secondary/20 active:scale-95 transition-all">
-          <span className="material-symbols-outlined">groups</span>
-          Sortear Times
+      {/* Main Stats Action Section */}
+      <div className="px-6 py-8 bg-white border-b border-gray-50 space-y-7 shadow-sm animate-fade-in-up">
+        <button className="w-full h-15 bg-navy text-white rounded-[1.2rem] flex items-center justify-center gap-3 font-black uppercase tracking-widest shadow-xl shadow-navy/20 active:scale-95 transition-all overflow-hidden relative group">
+          <div className="absolute inset-0 premium-shimmer opacity-10 group-hover:opacity-25 transition-opacity"></div>
+          <span className="material-symbols-outlined">shuffle</span>
+          DRAW TEAMS
         </button>
 
-        <div className="space-y-3">
-          <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">
-             <span>{confirmedCount} confirmed</span>
-             <span>{players.length} total</span>
+        <div className="space-y-4">
+          <div className="flex justify-between items-end px-1">
+             <div className="flex flex-col">
+                <span className="text-[18px] font-black text-navy">{confirmedCount}</span>
+                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Confirmed</span>
+             </div>
+             <div className="text-right">
+                <span className="text-xs font-black text-navy">{Math.round((confirmedCount / players.length) * 100)}%</span>
+                <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest">Availability</p>
+             </div>
           </div>
-          <div className="w-full h-2 bg-gray-50 rounded-full overflow-hidden">
+          <div className="w-full h-2.5 bg-gray-50 rounded-full overflow-hidden border border-gray-100 p-0.5">
              <div 
-              className="h-full bg-primary transition-all duration-500" 
+              className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(237,29,35,0.3)]" 
               style={{ width: `${(confirmedCount / players.length) * 100}%` }}
              ></div>
           </div>
@@ -55,28 +62,34 @@ const PlayerListScreen: React.FC<PlayerListScreenProps> = ({ players, onToggleCo
 
       {/* Players List */}
       <div className="px-6 py-6 space-y-3">
-        {players.map((player) => (
+        {players.map((player, idx) => (
           <div 
             key={player.id}
             onClick={() => onNavigate('profile', player)}
-            className={`flex items-center gap-4 p-3 bg-white rounded-2xl shadow-sm border-l-4 transition-all hover:shadow-md cursor-pointer ${
-              player.confirmed ? 'border-primary' : 'border-transparent opacity-60'
-            }`}
+            className={`flex items-center gap-4 p-4 bg-white rounded-[1.5rem] shadow-sm border border-white transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer group animate-fade-in-up`}
+            style={{ animationDelay: `${0.1 + idx * 0.05}s` }}
           >
             <div className="relative shrink-0">
-               <img src={player.avatar} className="size-12 rounded-full object-cover border border-gray-100" />
+               <div className="size-14 rounded-2xl overflow-hidden border-2 border-gray-50 shadow-inner group-hover:border-primary/20 transition-colors">
+                  <img src={player.avatar} className="w-full h-full object-cover" />
+               </div>
                {player.number && (
-                 <div className={`absolute -bottom-1 -right-1 size-5 rounded-full flex items-center justify-center text-[8px] font-black border-2 border-white text-white ${idxToColor(parseInt(player.id))}`}>
+                 <div className={`absolute -bottom-1.5 -right-1.5 size-6 rounded-lg flex items-center justify-center text-[10px] font-black border-2 border-white text-white shadow-md ${idxToColor(parseInt(player.id))}`}>
                    {player.number}
                  </div>
                )}
             </div>
             <div className="flex-1 min-w-0">
-               <h4 className={`text-base font-bold truncate ${player.confirmed ? 'text-[#1a0a0b]' : 'text-gray-400 font-medium'}`}>
-                {player.name}
-               </h4>
-               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                 {player.position} {player.level && `• ${player.level}`}
+               <div className="flex items-center gap-2">
+                 <h4 className={`text-[15px] font-black tracking-tight truncate ${player.confirmed ? 'text-navy uppercase italic' : 'text-gray-400 font-bold italic'}`}>
+                  {player.name}
+                 </h4>
+                 {player.confirmed && (
+                   <div className="size-1.5 bg-green-500 rounded-full shadow-[0_0_5px_rgba(34,197,94,0.5)]"></div>
+                 )}
+               </div>
+               <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-0.5">
+                 {player.position} <span className="mx-1 text-gray-200">•</span> {player.level}
                </p>
             </div>
             <button 
@@ -84,28 +97,29 @@ const PlayerListScreen: React.FC<PlayerListScreenProps> = ({ players, onToggleCo
                 e.stopPropagation();
                 onToggleConfirm(player.id);
               }}
-              className={`size-6 rounded-full flex items-center justify-center transition-all ${
+              className={`size-7 rounded-xl flex items-center justify-center transition-all duration-300 ${
                 player.confirmed 
-                  ? 'bg-primary text-white' 
-                  : 'border-2 border-gray-100 text-transparent'
+                  ? 'bg-primary text-white shadow-[0_5px_15px_rgba(237,29,35,0.3)] scale-110' 
+                  : 'bg-gray-50 border border-gray-100 text-transparent hover:border-primary/30'
               }`}
             >
-              <span className="material-symbols-outlined text-[16px]">check</span>
+              <span className="material-symbols-outlined text-[16px] font-bold">check</span>
             </button>
           </div>
         ))}
       </div>
       
-      {/* FAB Placeholder */}
-      <button className="fixed bottom-28 right-6 size-12 bg-white rounded-full flex items-center justify-center text-primary shadow-xl border border-gray-50 active:scale-90 transition-transform">
-         <span className="material-symbols-outlined">person_add</span>
+      {/* Floating Action Button */}
+      <button className="fixed bottom-28 right-6 size-14 bg-navy text-white rounded-[1.4rem] flex items-center justify-center shadow-[0_15px_30px_rgba(9,18,44,0.3)] border-2 border-white active:scale-90 transition-all hover:bg-primary group overflow-hidden">
+         <div className="absolute inset-0 premium-shimmer opacity-20"></div>
+         <span className="material-symbols-outlined text-[28px] relative z-10">person_add</span>
       </button>
     </div>
   );
 };
 
 const idxToColor = (idx: number) => {
-  const colors = ['bg-primary', 'bg-secondary', 'bg-[#1a0a0b]', 'bg-green-600', 'bg-orange-500'];
+  const colors = ['bg-primary', 'bg-secondary', 'bg-navy', 'bg-green-600', 'bg-orange-500'];
   return colors[idx % colors.length];
 };
 
