@@ -149,8 +149,10 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogout = useCallback(async () => {
-    await auth.signOut();
-    dispatch({ type: 'NAVIGATE', screen: 'login' });
+    if(window.confirm("Deseja realmente sair?")) {
+      await auth.signOut();
+      dispatch({ type: 'NAVIGATE', screen: 'login' });
+    }
   }, []);
 
   const renderScreen = () => {
@@ -160,7 +162,7 @@ const App: React.FC = () => {
           <span className="material-symbols-outlined text-red-500 text-5xl mb-4">error</span>
           <h2 className="text-xl font-black text-secondary uppercase italic">Erro de Conexão</h2>
           <p className="text-xs text-secondary/60 mb-6">{error}</p>
-          <button onClick={() => window.location.reload()} className="w-full h-12 bg-primary text-white rounded-xl font-bold">Recarregar</button>
+          <button onClick={() => window.location.reload()} className="w-full h-12 bg-primary text-white rounded-xl font-bold transition-all active:scale-95">Recarregar App</button>
         </div>
       );
     }
@@ -204,11 +206,16 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-center min-h-screen bg-slate-100 lg:py-8 overflow-hidden">
-      <div className="w-full max-w-[430px] h-full sm:h-[932px] sm:max-h-[95vh] bg-background shadow-2xl relative flex flex-col overflow-hidden sm:rounded-[48px] border-4 border-white">
+    <div className="flex justify-center min-h-screen bg-slate-100 lg:py-6 overflow-hidden">
+      {/* Container Adaptável: Ocupa largura total no mobile e max-w-md no desktop */}
+      <div className="w-full max-w-none md:max-w-[430px] h-screen md:h-[932px] md:max-h-[95vh] bg-background shadow-2xl relative flex flex-col overflow-hidden md:rounded-[48px] border-none md:border-4 md:border-white transition-all">
         
         {user && currentScreen !== 'login' && (
-          <button onClick={handleLogout} className="absolute top-6 right-6 z-[60] size-10 bg-white shadow-md rounded-xl flex items-center justify-center text-slate-400 hover:text-primary transition-all active:scale-95">
+          <button 
+            onClick={handleLogout} 
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 z-[60] size-10 bg-white/90 backdrop-blur-md shadow-lg border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary transition-all active:scale-90"
+            title="Sair"
+          >
             <span className="material-symbols-outlined text-[20px]">logout</span>
           </button>
         )}
